@@ -1,3 +1,7 @@
+
+
+
+
 #include <FS.h>                   //this needs to be first, or it all crashes and burns...
 #include <DNSServer.h>
 #include <ESP8266WiFi.h>
@@ -23,6 +27,7 @@ void connTOwifi(){
     ETS_UART_INTR_DISABLE();
     wifi_station_disconnect();
     ETS_UART_INTR_ENABLE();
+    WiFi.hostname("WordClock");//32 chars max
     WiFi.begin();
     for (byte i = 0; i<5; i++){ //will try to connect 5 times in 10 seconds
       if(WiFi.waitForConnectResult() != WL_CONNECTED) {
@@ -87,16 +92,11 @@ void allowOTA(){
 }
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(115200);
-  //Serial.println("\n Starting");
-  //int pinstatus;
   pinMode(wifimgr_PIN, INPUT);
   pinMode(apmode_PIN, INPUT);
   pinMode(ota_PIN, INPUT);
-  //pinstatus = digitalRead(TRIGGER_PIN);
-  //Serial.println("PinStatus= ");
-  //Serial.print(pinstatus);
+
   if (digitalRead(apmode_PIN)){ //pins are pulled high as connected. the switch pulls it low
     connTOwifi();
   }
@@ -138,6 +138,9 @@ void loop() {
     IPAddress myIP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
     Serial.println(myIP);
+  }
+  else if (WiFi.status() != WL_CONNECTED) {
+    connTOwifi();
   }
 
 
