@@ -12,7 +12,7 @@
 // ESP-01 users please note: the only pins available (0 and 2), are shared
 // with the bootloader, so always set them HIGH at power-up
 #define wifimgr_PIN D7
-
+#define apmode_PIN D6
 
 void setup() {
   // put your setup code here, to run once:
@@ -20,9 +20,48 @@ void setup() {
   //Serial.println("\n Starting");
   //int pinstatus;
   pinMode(wifimgr_PIN, INPUT);
+  pinMode(apmode_PIN, INPUT);
   //pinstatus = digitalRead(TRIGGER_PIN);
   //Serial.println("PinStatus= ");
   //Serial.print(pinstatus);
+  if (apmode_PIN){ //pins are pulled high as connected. the switch pulls it low
+    if (WiFi.SSID()) {
+      Serial.println("Using saved wifi credentials");
+      //trying to fix connection in progress hanging
+      ETS_UART_INTR_DISABLE();
+      wifi_station_disconnect();
+      ETS_UART_INTR_ENABLE();
+      WiFi.begin();
+      for (byte i = 0; i<5; i++){ //will try to connect 5 times in 10 seconds
+        if(WiFi.waitForConnectResult() != WL_CONNECTED) {
+          Serial.println("Connection Failed!");
+          delay(2000);
+        }
+        else {
+          Serial.println("Connection Success");
+          break;
+        }
+      }
+    }
+    else {
+      Serial.println("No wifi credentials saved");
+      Serial.println("Fallback to Access Point Mode");
+      //WIFI INIT AP mode
+    WiFi.softAP("WordClock");
+    IPAddress myIP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+  	Serial.println(myIP);
+    }
+  }
+  else {
+    Serial.println("Access Point Mode selected");
+    //WIFI INIT AP mode
+  WiFi.softAP("WordClock");
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);
+  }
+
 }
 
 
@@ -32,18 +71,13 @@ void loop() {
   if ( digitalRead(wifimgr_PIN) == LOW ) {
     //WiFiManager
     WiFiManager wifiManager; //Local intialization. Once its business is done, there is no need to keep it around
-    //wifiManager.resetSettings();//reset settings - for testing
-    //wifiManager.setTimeout(120); //sets timeout until configuration portal gets turned off useful to make it all retry or go to sleep in seconds
-    //WiFi.mode(WIFI_STA); //WITHOUT THIS THE AP DOES NOT SEEM TO WORK PROPERLY WITH SDK 1.5 , update to at least 1.5.1
-
-    if (!wifiManager.startConfigPortal("AP_Proto")) {
-      Serial.println("failed to connect and hit timeout");
+        if (!wifiManager.startConfigPortal("AP_Proto")) {
+      Serial.println("failed to connect... timeout");
       delay(3000);
       ESP.reset();//reset and try again, or maybe put it to deep sleep
       delay(5000);
     }
-
-    Serial.println("connected...yeey :)");//if you get here you have connected to the WiFi
+    Serial.println("Connection Success");//if you get here you have connected to the WiFi
   }
   //end wifimgrsetupmode
 
