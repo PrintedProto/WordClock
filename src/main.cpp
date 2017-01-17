@@ -1,23 +1,30 @@
+/*
 
-
-
-
+https://github.com/platformio/framework-arduinoespressif8266/tree/master/libraries
+https://github.com/esp8266/Arduino/tree/master/libraries
+*/
 #include <FS.h>                   //this needs to be first, or it all crashes and burns...
 #include <DNSServer.h>
 #include <ESP8266WiFi.h>
+#include <WiFiClient.h>
 #include <ESP8266mDNS.h>
+#include <WebSocketsServer.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 #include <ArduinoJson.h>      //https://github.com/bblanchon/ArduinoJson
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
+#include <Hash.h>
 
 // select wich pin will trigger the configuraton portal when set to LOW
-// ESP-01 users please note: the only pins available (0 and 2), are shared
-// with the bootloader, so always set them HIGH at power-up
 #define wifimgr_PIN D7
 #define apmode_PIN D6
 #define ota_PIN D2
+
+ESP8266WebServer server = ESP8266WebServer(80);
+WebSocketsServer webSocket = WebSocketsServer(81);
+ESP8266HTTPUpdateServer httpUpdater;
 
 void connTOwifi(){
   if (WiFi.SSID()) {
@@ -58,7 +65,7 @@ void connTOwifi(){
 void allowOTA(){
   //ArduinoOTA code
   ArduinoOTA.setPort(8266);
-  ArduinoOTA.setHostname("WordClock-OTA");
+  //ArduinoOTA.setHostname("WordClock-OTA");
   ArduinoOTA.setPassword("OTAadmin");
   ArduinoOTA.onStart([]() {
     String type;
@@ -89,6 +96,42 @@ void allowOTA(){
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
     Serial.println("Accepting OTA updates");
+    //OTA via http usage curl -u admin:admin -F "image=@firmware.bin" esp8266-webupdate.local/firmware
+    httpUpdater.setup(&server, "/firmware", "WordClock-OTA", "OTAadmin");
+
+}
+
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
+
+    switch(type) {
+        case WStype_DISCONNECTED:
+            Serial.printf("[%u] Disconnected!\n", num);
+            break;
+        case WStype_CONNECTED: {
+            IPAddress ip = webSocket.remoteIP(num);
+            Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+
+            // send message to client
+            webSocket.sendTXT(num, "Connected");
+        }
+            break;
+        case WStype_TEXT:
+            Serial.printf("[%u] get Text: %s\n", num, payload);
+
+            if(payload[0] == '#') {
+                // we get RGB data
+
+                // decode rgb data
+                uint32_t rgb = (uint32_t) strtol((const char *) &payload[1], NULL, 16);
+
+              //  analogWrite(LED_RED,    ((rgb >> 16) & 0xFF));
+              //  analogWrite(LED_GREEN,  ((rgb >> 8) & 0xFF));
+              //  analogWrite(LED_BLUE,   ((rgb >> 0) & 0xFF));
+            }
+
+            break;
+    }
+
 }
 
 void setup() {
@@ -112,6 +155,11 @@ void setup() {
   if (!digitalRead(ota_PIN)){
     allowOTA(); //allow ota updating
   }
+  // start webSocket server
+  webSocket.begin();
+  webSocket.onEvent(webSocketEvent);
+  // start HTTP server
+  server.begin();
 }
 
 
@@ -131,6 +179,7 @@ void loop() {
     Serial.println("Connection Success");//if you get here you have connected to the WiFi
   }
   //end wifimgrsetupmode
+  //AP mode selected?
   if (!digitalRead(apmode_PIN)){ //pins are pulled high as connected. the switch pulls it low
     //WIFI INIT AP mode
     WiFi.mode(WIFI_AP);
@@ -139,11 +188,13 @@ void loop() {
     Serial.print("AP IP address: ");
     Serial.println(myIP);
   }
-  else if (WiFi.status() != WL_CONNECTED) {
+  else if ((WiFi.status() != WL_CONNECTED) && (WiFi.SSID())) {
     connTOwifi();
   }
-
-
+  //AP mode selected?
+  webSocket.loop();
+  server.handleClient();
   // put your main code here, to run repeatedly:
 
 }
+//pio run --verbose -e nodemcu -t upload --upload-port 192.168
