@@ -8,7 +8,7 @@ https://github.com/esp8266/Arduino/tree/master/libraries
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266mDNS.h>
-#include <WebSocketsServer.h>
+#include <WebSocketsServer.h>  //https://github.com/Links2004/arduinoWebSockets
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
@@ -18,9 +18,9 @@ https://github.com/esp8266/Arduino/tree/master/libraries
 #include <Hash.h>
 
 // select wich pin will trigger the configuraton portal when set to LOW
-#define wifimgr_PIN D7
-#define apmode_PIN D6
-#define ota_PIN D2
+#define wifimgr_PIN D7  //use wifimgr
+#define apmode_PIN D6   //set ap mode
+#define ota_PIN D2      //allow ota updates
 
 ESP8266WebServer server = ESP8266WebServer(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
@@ -101,22 +101,24 @@ void allowOTA(){
 
 }
 
+#define USE_SERIAL Serial1
+
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
 
     switch(type) {
         case WStype_DISCONNECTED:
-            Serial.printf("[%u] Disconnected!\n", num);
+            USE_SERIAL.printf("[%u] Disconnected!\n", num);
             break;
         case WStype_CONNECTED: {
             IPAddress ip = webSocket.remoteIP(num);
-            Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+            USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
 
             // send message to client
             webSocket.sendTXT(num, "Connected");
         }
             break;
         case WStype_TEXT:
-            Serial.printf("[%u] get Text: %s\n", num, payload);
+            USE_SERIAL.printf("[%u] get Text: %s\n", num, payload);
 
             if(payload[0] == '#') {
                 // we get RGB data
@@ -129,6 +131,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
               //  analogWrite(LED_BLUE,   ((rgb >> 0) & 0xFF));
             }
 
+            break;
+        case WStype_BIN:
+            USE_SERIAL.printf("[%u] get binary lenght: %u\n", num, lenght);
+            hexdump(payload, lenght);
+
+            // send message to client
+            // webSocket.sendBIN(num, payload, lenght);
             break;
     }
 
