@@ -11,7 +11,7 @@ https://github.com/esp8266/Arduino/tree/master/libraries
 #include <WebSocketsServer.h>  //https://github.com/Links2004/arduinoWebSockets
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPUpdateServer.h>
-#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+#include "WiFiManager.h"          //https://github.com/tzapu/WiFiManager
 #include <ArduinoJson.h>      //https://github.com/bblanchon/ArduinoJson
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
@@ -71,7 +71,7 @@ void connTOwifi(){
   }
   else { //wifi manager requested
     WiFiManager wifiManager; //Local intialization. Once its business is done, there is no need to keep it around
-        if (!wifiManager.startConfigPortal("AP_Proto")) {
+        if (!wifiManager.startConfigPortal("AP_Wordclock")) {
       //debugMSG.println("failed to connect... timeout");
       delay(3000);
       ESP.reset();//reset and try again, or maybe put it to deep sleep
@@ -290,6 +290,7 @@ void initServer(){
   //SERVER INIT
     //list directory
     server.on("/list", HTTP_GET, handleFileList);
+    /*
     //load editor
     server.on("/edit", HTTP_GET, [](){
       if(!handleFileRead("/edit.htm")) server.send(404, "text/plain", "FileNotFound");
@@ -301,7 +302,7 @@ void initServer(){
     //first callback is called after the request has ended with all parsed arguments
     //second callback handles file uploads at that location
     server.on("/edit", HTTP_POST, [](){ server.send(200, "text/plain", ""); }, handleFileUpload);
-
+    */
     //called when the url is not defined here
     //use it to load content from SPIFFS
     server.onNotFound([](){
@@ -335,39 +336,129 @@ void initServer(){
 
 }
 
+void checkConfigmode(){
+  {
+  if(!SPIFFS.exists(apmodefile)){ //check if apmode file exists, if not create it
+    File f = SPIFFS.open(apmodefile, "w");
+      if(f){//verifies that file opened successfully
+    f.print(0); //0 means ap mode is selected, default config
+    f.close();
+    apmodeSelect = 0;
+      }
+      else{
+        //file failed to open
+      }
+    }
+  else{
+    File f = SPIFFS.open(apmodefile, "r"); //file exists open as readonly
+    if(f){//verifies that file opened successfully
+      apmodeSelect = f.parseInt(); //parse first integer in file
+      if(apmodeSelect || !apmodeSelect){ //if integer is one or zero file is good, close file, continue program
+        f.close();
+        }
+      else{
+        f.close(); //if integer is not one or zero something is wrong, close file
+        f = SPIFFS.open(apmodefile, "w"); // create new file on top of broken file
+        if(f){
+        f.print(0); //set file to deafault config
+        f.close();
+        apmodeSelect = 0;
+            }
+            else{
+              //file failed to open
+            }
+        }
+      }
+      else{
+        //file failed to open
+      }
+    }
+  }//apmodefile
+  {
+  if(!SPIFFS.exists(otamodefile)){ //check if otamode file exists, if not create it
+    File f = SPIFFS.open(otamodefile, "w");
+      if(f){//verifies that file opened successfully
+    f.print(0); //0 means ota mode is selected, default config
+    f.close();
+    otamodeSelect = 0;
+      }
+      else{
+        //file failed to open
+      }
+    }
+  else{
+    File f = SPIFFS.open(otamodefile, "r"); //file exists open as readonly
+    if(f){//verifies that file opened successfully
+      otamodeSelect = f.parseInt(); //parse first integer in file
+      if(otamodeSelect || !otamodeSelect){ //if integer is one or zero file is good, close file, continue program
+        f.close();
+        }
+      else{
+        f.close(); //if integer is not one or zero something is wrong, close file
+        f = SPIFFS.open(otamodefile, "w"); // create new file on top of broken file
+        if(f){
+        f.print(0); //set file to deafault config
+        f.close();
+        otamodeSelect = 0;
+            }
+            else{
+              //file failed to open
+            }
+        }
+      }
+      else{
+        //file failed to open
+      }
+    }
+  }//otamodefile
+  {
+  if(!SPIFFS.exists(mgrmodefile)){ //check if mgrmode file exists, if not create it
+    File f = SPIFFS.open(mgrmodefile, "w");
+      if(f){//verifies that file opened successfully
+    f.print(0); //1 means wifi mgr mode is selected, default config 0
+    f.close();
+    mgrmodeSelect = 0;
+      }
+      else{
+        //file failed to open
+      }
+    }
+  else{
+    File f = SPIFFS.open(mgrmodefile, "r"); //file exists open as readonly
+    if(f){//verifies that file opened successfully
+      mgrmodeSelect = f.parseInt(); //parse first integer in file
+      if(mgrmodeSelect || !mgrmodeSelect){ //if integer is one or zero file is good, close file, continue program
+        f.close();
+        }
+      else{
+        f.close(); //if integer is not one or zero something is wrong, close file
+        f = SPIFFS.open(mgrmodefile, "w"); // create new file on top of broken file
+        if(f){
+        f.print(0); //set file to deafault config
+        f.close();
+        mgrmodeSelect = 0;
+            }
+            else{
+              //file failed to open
+            }
+        }
+      }
+      else{
+        //file failed to open
+      }
+    }
+  }//mgrmodefile
+}
+
 void handleRoot() {
 if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "FileNotFound");
 }
 void setup() {
   //debugMSG.begin(115200);
-  //pinMode(wifimgr_PIN, INPUT);
-  //pinMode(apmode_PIN, INPUT);
-  //pinMode(ota_PIN, INPUT);
+
   SPIFFS.begin();
-  /*{
-    Dir dir = SPIFFS.openDir("/");
-    while (dir.next()) {
-      String fileName = dir.fileName();
-      size_t fileSize = dir.fileSize();
-      //debugMSG.printf("FS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
-    }
-    //debugMSG.printf("\n");
-  }*/
-  {
-  File f = SPIFFS.open(apmodefile, "a+");
-  apmodeSelect = f.parseInt(); //false means ap mode is selected
-  f.close();
-  }
-  {
-  File f = SPIFFS.open(otamodefile, "a+");
-  otamodeSelect = f.parseInt(); //false means ota mode is selected
-  f.close();
-  }
-  {
-  File f = SPIFFS.open(mgrmodefile, "a+");
-  mgrmodeSelect = f.parseInt(); //true means wifimgr mode is selected
-  f.close();
-  }
+  checkConfigmode();
+
   if (apmodeSelect && !mgrmodeSelect){
     connTOwifi();
   }
@@ -381,7 +472,13 @@ void setup() {
     //debugMSG.println(myIP);
   }
   else{ //means mgrmodeselect is set to true
-
+    WiFiManager wifiManager; //Local intialization. Once its business is done, there is no need to keep it around
+        if (!wifiManager.startConfigPortal("AP_Wordclock")) {
+      //debugMSG.println("failed to connect... timeout");
+      delay(3000);
+      ESP.reset();//reset and try again, or maybe put it to deep sleep
+      delay(5000);
+    }
   }
   if (!otamodeSelect){ //false means ota mode is selected
     allowOTA(); //allow ota updating
@@ -396,10 +493,13 @@ void setup() {
 
 
   server.on("/", HTTP_GET, [](){
-    if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "FileNotFound");
+    if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "PageNotFound");
   });
   server.on("/ledcolor", HTTP_GET, [](){
-    if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", "FileNotFound");
+    if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", "PageNotFound");
+  });
+  server.on("/test", HTTP_GET, [](){
+    if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", "PageNotFound");
   });
 }
 
