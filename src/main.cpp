@@ -29,6 +29,15 @@ ExampleListener listener;
 //#define apmode_PIN D6   //set ap mode
 //#define ota_PIN D2      //allow ota updates
 
+const char apmodefile[] = "/mode/apmode.txt"; //spiffs file for ap mode selection (0-512)
+volatile byte apmodeSelect; //0 means AP mode is selected
+
+const char otamodefile[] = "/mode/otamode.txt"; //spiffs file for OTA mode selection (0-512)
+volatile byte otamodeSelect; //0 means ota mode is selected
+
+const char mgrmodefile[] = "/mode/mgrmode.txt"; //spiffs file for wifi mgr mode selection (0-512)
+volatile byte mgrmodeSelect; //1 means wifimgr mode is selected
+
 #define debugMSG Serial //comment out serial to disable serial messages
 
 ESP8266WebServer server = ESP8266WebServer(80);
@@ -60,15 +69,14 @@ void connTOwifi(){
       }
     }
   }
-  else {
-    //debugMSG.println("No wifi credentials saved");
-    WiFi.mode(WIFI_AP);
-    //debugMSG.println("Fallback to Access Point Mode");
-    //WIFI INIT AP mode
-    WiFi.softAP("WordClock-F");
-    IPAddress myIP = WiFi.softAPIP();
-    //debugMSG.print("AP IP address: ");
-    //debugMSG.println(myIP);
+  else { //wifi manager requested
+    WiFiManager wifiManager; //Local intialization. Once its business is done, there is no need to keep it around
+        if (!wifiManager.startConfigPortal("AP_Proto")) {
+      //debugMSG.println("failed to connect... timeout");
+      delay(3000);
+      ESP.reset();//reset and try again, or maybe put it to deep sleep
+      delay(5000);
+    }
   }
 }
 
@@ -332,14 +340,38 @@ if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "FileNotFound")
 }
 void setup() {
   //debugMSG.begin(115200);
-  pinMode(wifimgr_PIN, INPUT);
-  pinMode(apmode_PIN, INPUT);
-  pinMode(ota_PIN, INPUT);
-
-  if (digitalRead(apmode_PIN)){ //pins are pulled high as connected. the switch pulls it low
+  //pinMode(wifimgr_PIN, INPUT);
+  //pinMode(apmode_PIN, INPUT);
+  //pinMode(ota_PIN, INPUT);
+  SPIFFS.begin();
+  /*{
+    Dir dir = SPIFFS.openDir("/");
+    while (dir.next()) {
+      String fileName = dir.fileName();
+      size_t fileSize = dir.fileSize();
+      //debugMSG.printf("FS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
+    }
+    //debugMSG.printf("\n");
+  }*/
+  {
+  File f = SPIFFS.open(apmodefile, "a+");
+  apmodeSelect = f.parseInt(); //false means ap mode is selected
+  f.close();
+  }
+  {
+  File f = SPIFFS.open(otamodefile, "a+");
+  otamodeSelect = f.parseInt(); //false means ota mode is selected
+  f.close();
+  }
+  {
+  File f = SPIFFS.open(mgrmodefile, "a+");
+  mgrmodeSelect = f.parseInt(); //true means wifimgr mode is selected
+  f.close();
+  }
+  if (apmodeSelect && !mgrmodeSelect){
     connTOwifi();
   }
-  else {
+  else if (!apmodeSelect && !mgrmodeSelect){
     //debugMSG.println("Access Point Mode selected");
     WiFi.mode(WIFI_AP);
     //WIFI INIT AP mode
@@ -348,7 +380,10 @@ void setup() {
     //debugMSG.print("AP IP address: ");
     //debugMSG.println(myIP);
   }
-  if (!digitalRead(ota_PIN)){
+  else{ //means mgrmodeselect is set to true
+
+  }
+  if (!otamodeSelect){ //false means ota mode is selected
     allowOTA(); //allow ota updating
   }
   // start webSocket server
@@ -359,16 +394,7 @@ void setup() {
   server.begin();
   MDNS.begin("wordclock");
 
-  SPIFFS.begin();
-  {
-    Dir dir = SPIFFS.openDir("/");
-    while (dir.next()) {
-      String fileName = dir.fileName();
-      size_t fileSize = dir.fileSize();
-      //debugMSG.printf("FS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
-    }
-    //debugMSG.printf("\n");
-  }
+
   server.on("/", HTTP_GET, [](){
     if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "FileNotFound");
   });
@@ -381,33 +407,6 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
 
-  // is wifi config requested?
-  if ( digitalRead(wifimgr_PIN) == LOW ) {
-    //WiFiManager
-    WiFiManager wifiManager; //Local intialization. Once its business is done, there is no need to keep it around
-        if (!wifiManager.startConfigPortal("AP_Proto")) {
-      //debugMSG.println("failed to connect... timeout");
-      delay(3000);
-      ESP.reset();//reset and try again, or maybe put it to deep sleep
-      delay(5000);
-    }
-    //debugMSG.println("Connection Success");//if you get here you have connected to the WiFi
-  }
-  //end wifimgrsetupmode
-  //AP mode selected?
-  if (!digitalRead(apmode_PIN)){ //pins are pulled high as connected. the switch pulls it low
-    //WIFI INIT AP mode
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP("WordClock");
-    IPAddress myIP = WiFi.softAPIP();
-    //debugMSG.print("AP IP address: ");
-    //debugMSG.println(myIP);
-  }
-  else if (WiFi.status() != WL_CONNECTED) {
-    if (WiFi.SSID()){
-    connTOwifi();
-    }
-  }
   //AP mode selected?
   webSocket.loop();
   server.handleClient();
