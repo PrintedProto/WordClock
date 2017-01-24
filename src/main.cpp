@@ -25,9 +25,9 @@ ExampleListener listener;
 //https://github.com/nailbuster/esp8266FTPServer
 
 // select wich pin will trigger the configuraton portal when set to LOW
-#define wifimgr_PIN D7  //use wifimgr
-#define apmode_PIN D6   //set ap mode
-#define ota_PIN D2      //allow ota updates
+//#define wifimgr_PIN D7  //use wifimgr
+//#define apmode_PIN D6   //set ap mode
+//#define ota_PIN D2      //allow ota updates
 
 #define debugMSG Serial //comment out serial to disable serial messages
 
