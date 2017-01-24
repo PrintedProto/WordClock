@@ -16,6 +16,11 @@ https://github.com/esp8266/Arduino/tree/master/libraries
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <Hash.h>
+#include "JsonStreamingParser.h"
+#include "JsonListener.h"
+#include "ExampleParser.h"
+JsonStreamingParser parser;
+ExampleListener listener;
 //#include <FSbrowser.h>
 //https://github.com/nailbuster/esp8266FTPServer
 
@@ -188,7 +193,7 @@ bool handleFileRead(String path){
 }
 
 void handleFileUpload(){
-  if(server.uri() != "/edit") return;
+  if((server.uri() != "/edit") && (server.uri() != "/upload") ) return;
   HTTPUpload& upload = server.upload();
   if(upload.status == UPLOAD_FILE_START){
     String filename = upload.filename;
@@ -204,6 +209,7 @@ void handleFileUpload(){
     if(fsUploadFile)
       fsUploadFile.close();
     //debugMSG.print("handleFileUpload Size: "); //debugMSG.println(upload.totalSize);
+    server.send(200, "text/plain", "Success");
   }
 }
 
@@ -262,6 +268,16 @@ void handleFileList() {
   output += "]";
   server.send(200, "text/json", output);
 }
+void handleJSON(){
+  //Serial.println(String(ESP.getFreeHeap()));
+  parser.setListener(&listener);
+  // put your setup code here, to run once:
+  char json[] = "{\"a\":3, \"b\":{\"c\":\"d\"}}";
+  for (int i = 0; i < sizeof(json); i++) {
+    parser.parse(json[i]);
+  }
+  //Serial.println(String(ESP.getFreeHeap()));
+}
 void initServer(){
   //SERVER INIT
     //list directory
@@ -295,6 +311,24 @@ void initServer(){
       server.send(200, "text/json", json);
       json = String();
   });
+  server.on("/sendJSON", handleJSON);
+  server.on("/upload", HTTP_GET, []() {
+    const char* UploadHTML = R"(<html><body><form method='POST' action='' enctype='multipart/form-data'>
+                  <input type='file' name='upload'>
+                  <input type='submit' value="upload">
+               </form>
+         </body></html>)";
+         server.send(200, "text/html", UploadHTML);
+    //server.sendHeader("Connection", "close");
+    //server.sendHeader("Access-Control-Allow-Origin", "*");
+    //server.send(200, "text/html", serverIndex);
+  });
+  server.on("/upload", HTTP_POST, [](){ server.send(200, "text/plain", "uploading"); }, handleFileUpload);
+
+}
+
+void handleRoot() {
+if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "FileNotFound");
 }
 void setup() {
   //debugMSG.begin(115200);
@@ -335,6 +369,12 @@ void setup() {
     }
     //debugMSG.printf("\n");
   }
+  server.on("/", HTTP_GET, [](){
+    if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "FileNotFound");
+  });
+  server.on("/ledcolor", HTTP_GET, [](){
+    if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", "FileNotFound");
+  });
 }
 
 

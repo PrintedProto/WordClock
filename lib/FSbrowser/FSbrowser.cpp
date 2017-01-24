@@ -25,17 +25,19 @@
 
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
-#include <ESP8266WebServer.h>
+//#include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
-#include <FS.h>
+//#include <FS.h>
 #include "FSbrowser.h"
 #define DBG_OUTPUT_PORT //Serial
 //holds the current upload
-//File fsUploadFile;
+File fsUploadFile;
+ESP8266WebServer *_server;
 
-void FSbrowser::fsset(ESP8266WebServer *server) {
+FSbrowser::FSbrowser(ESP8266WebServer *server){
   _server = server;
 }
+
 
 //format bytes
 String formatBytes(size_t bytes){
@@ -50,7 +52,7 @@ String formatBytes(size_t bytes){
   }
 }
 
-String getContentType(String filename,ESP8266WebServer *_server){
+String getContentType(String filename){
   if(_server->hasArg("download")) return "application/octet-stream";
   else if(filename.endsWith(".htm")) return "text/html";
   else if(filename.endsWith(".html")) return "text/html";
@@ -67,7 +69,7 @@ String getContentType(String filename,ESP8266WebServer *_server){
   return "text/plain";
 }
 
-bool FSbrowser::handleFileRead(String path){
+bool handleFileRead(String path){
   //DBG_OUTPUT_PORT.println("handleFileRead: " + path);
   if(path.endsWith("/")) path += "index.htm";
   String contentType = getContentType(path);
@@ -83,7 +85,7 @@ bool FSbrowser::handleFileRead(String path){
   return false;
 }
 
-void FSbrowser::handleFileUpload(){
+void handleFileUpload(){
   if(_server->uri() != "/edit") return;
   HTTPUpload& upload = _server->upload();
   if(upload.status == UPLOAD_FILE_START){
@@ -103,7 +105,7 @@ void FSbrowser::handleFileUpload(){
   }
 }
 
-void FSbrowser::handleFileDelete(){
+void handleFileDelete(){
   if(_server->args() == 0) return _server->send(500, "text/plain", "BAD ARGS");
   String path = _server->arg(0);
   //DBG_OUTPUT_PORT.println("handleFileDelete: " + path);
@@ -116,7 +118,7 @@ void FSbrowser::handleFileDelete(){
   path = String();
 }
 
-void FSbrowser::handleFileCreate(){
+void handleFileCreate(){
   if(_server->args() == 0)
     return _server->send(500, "text/plain", "BAD ARGS");
   String path = _server->arg(0);
@@ -134,7 +136,7 @@ void FSbrowser::handleFileCreate(){
   path = String();
 }
 
-void FSbrowser::handleFileList() {
+void handleFileList() {
   if(!_server->hasArg("dir")) {_server->send(500, "text/plain", "BAD ARGS"); return;}
 
   String path = _server->arg("dir");
@@ -159,7 +161,7 @@ void FSbrowser::handleFileList() {
   _server->send(200, "text/json", output);
 }
 
-void FSbrowser::fssetup(void){
+void FSbrowser::fssetup(ESP8266WebServer *server){
   //DBG_OUTPUT_PORT.begin(115200);
   //DBG_OUTPUT_PORT.print("\n");
   //DBG_OUTPUT_PORT.setDebugOutput(true);
@@ -196,6 +198,7 @@ void FSbrowser::fssetup(void){
 */
 
   //SERVER INIT
+  _server = server;
   //list directory
   _server->on("/list", HTTP_GET, handleFileList);
   //load editor

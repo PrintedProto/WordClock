@@ -2,11 +2,11 @@
 
 #ifndef __FSBROWSER_H_
 #define __FSBROWSER_H_
-
+#include <ESP8266WebServer.h>
 #include <FS.h>
 #define DBG_OUTPUT_PORT //Serial
 
-class ESP8266WebServer;
+//class ESP8266WebServer;
 
 class FSbrowser {
 private:
@@ -14,16 +14,13 @@ private:
   File fsUploadFile;
 
 public:
-  void fsset(ESP8266WebServer *server)
-  {
-    fsset(server);
-  }
+  FSbrowser(ESP8266WebServer *server);
   bool handleFileRead(String);
   void handleFileUpload();
   void handleFileDelete();
   void handleFileCreate();
   void handleFileList();
-  void fssetup();
+  void fssetup(ESP8266WebServer *server);
   void fsloop();
 
 };
