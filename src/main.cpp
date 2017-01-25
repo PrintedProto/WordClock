@@ -20,6 +20,11 @@ https://github.com/esp8266/Arduino/tree/master/libraries
 #include "JsonListener.h"
 #include "ExampleParser.h"
 #include "Adafruit_NeoPixel.h"
+// For DS3231 RTC
+#include <Wire.h>               //I2C library
+#include "RtcDS3231.h"    //RTC library
+
+RTC_DS3231 RTC;
 JsonStreamingParser parser;
 ExampleListener listener;
 //#include <FSbrowser.h>
@@ -46,7 +51,7 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 ESP8266HTTPUpdateServer httpUpdater;
 File fsUploadFile;
 
-unsigned int  hour=00, minute=4, second=00;
+unsigned int  hour=00, minute=4, second=00; //start led code, ends line 669
 
 #define wordPIN D1
 #define wordLEDS 110
@@ -130,6 +135,543 @@ const int colours[][3] = {{255, 255, 255},                                      
 };
 
 const char* colourName[9] = {"WHITE","RED","GREEN","BLUE","ORANGE","YELLOW","CYAN","PURPLE","PINK"};
+
+// To adjust the brightness
+int LEDbrightness = 30;                                  // base LED brightness, value between 1 - 255 (with 255 being the brightest)
+int maxBrightness = 200;                                // limit the maximum brightness to lower stress on the LEDs
+int IncBrightPin=7;
+int RedBrightPin=9;
+// Value of each colour, starting with green
+int rValue = 0;
+int gValue = 255;
+int bValue = 0;
+
+// To turn LED fading on (=true) or off (=false)
+boolean wordFading = true;
+boolean minuteFading = true;
+int fadingDelay = 20;
+int fadingStep = 1;
+
+boolean daylightSaving(){
+  /*if (month<3 || month>10) return false; // keine Sommerzeit in Jan, Feb, Nov, Dez
+  if (month>3 && month<10) return true; // Sommerzeit in Apr, Mai, Jun, Jul, Aug, Sep
+  if (month==3 && (hour + 24 * day)>=(1 + tzHours + 24*(31 - (5 * year /4 + 4) % 7)) || month==10 && (hour + 24 * day)<(1 + tzHours + 24*(31 - (5 * year /4 + 1) % 7)))
+    return true;
+  else
+    return false;*/
+}
+
+void ledsOff() {
+  if ( wordFading == true && minuteFading == true){
+//    int step = LEDbrightness / 20;                // fade out in 20 steps, 100 ms apart
+//    for ( int i = LEDbrightness ; i > 0 ; i-=step ) {
+    for ( int i = LEDbrightness ; i > 0 ; i-=fadingStep ) {
+      for ( int j = 0 ; j < wordLEDS ; j++ ){                 // we fade every LED ...
+        if ( wordPixels.getPixelColor(j) != 0){               // that is not off
+          wordPixels.setPixelColor(j,i*rValue/255,i*gValue/255,i*bValue/255);
+        }
+      }
+      for ( int j = 0 ; j < minuteLEDS ; j++ ){
+        minutePixels.setPixelColor(j,i*rValue/255,i*gValue/255,i*bValue/255);   // here we know that each LED is ON
+      }
+      wordPixels.show();
+      minutePixels.show();
+      delay(fadingDelay);
+    }
+  }
+
+  if ( wordFading == true && minuteFading == false){
+//    int step = LEDbrightness / 20;                // fade out in 20 steps, 100 ms apart
+//    for ( int i = LEDbrightness ; i > 0 ; i-=step ) {
+    for ( int i = LEDbrightness ; i > 0 ; i-=fadingStep ) {
+      for ( int j = 0 ; j < wordLEDS ; j++ ){                 // we fade every LED ...
+        if ( wordPixels.getPixelColor(j) != 0){               // that is not off
+          wordPixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+        }
+      }
+      wordPixels.show();
+      delay(fadingDelay);
+    }
+  }
+
+  if ( wordFading == false && minuteFading == true){
+//    int step = LEDbrightness / 20;                // fade out in 20 steps, 100 ms apart
+//    for ( int i = LEDbrightness ; i > 0 ; i-=step ) {
+    for ( int i = LEDbrightness ; i > 0 ; i-=fadingStep ) {
+      for ( int j = 0 ; j < minuteLEDS ; j++ ){
+        minutePixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);   // here we know that each LED is ON
+      }
+      minutePixels.show();
+      delay(fadingDelay);
+    }
+  }
+
+  // make sure that they are really off and in case both wordFading and minuteFading is false
+  for ( int j = 0 ; j < wordLEDS ; j++ ){
+    wordPixels.setPixelColor(j,0,0,0);
+  }
+  for ( int j = 0 ; j < minuteLEDS ; j++ ){
+    minutePixels.setPixelColor(j,0,0,0);
+  }
+  wordPixels.show();
+  minutePixels.show();
+}
+
+void minutesOff() {
+  if ( minuteFading == true){
+//    int step = LEDbrightness / 20;                // fade out in 20 steps, 100 ms apart
+//    for ( int i = LEDbrightness ; i > 0 ; i-=step ) {
+    for ( int i = LEDbrightness ; i > 0 ; i-=fadingStep ) {
+      for ( int j = 0 ; j < minuteLEDS ; j++ ){                 // we fade every LED ...
+        if ( minutePixels.getPixelColor(j) != 0){               // that is not off
+          minutePixels.setPixelColor(j,i*rValue/255,i*gValue/255,i*bValue/255);
+        }
+      }
+      minutePixels.show();
+      delay(fadingDelay);
+    }
+  }
+
+  // make sure that they are really off and in case minuteFading is false
+  for ( int j = 0 ; j < minuteLEDS ; j++ ){
+    minutePixels.setPixelColor(j,0,0,0);
+  }
+  minutePixels.show();
+}
+
+void writeWords(int Words[]) {
+if ( wordFading == true) {
+    for ( int i = 0 ; i <= LEDbrightness ; i+=fadingStep ){
+      for ( int k = 1 ; k < Words[0]+1 ; k++ ) {
+        for ( int j=1 ; j < wordPositions[Words[k]][0]+1 ; j++ ){
+          wordPixels.setPixelColor(wordPositions[Words[k]][j],i*rValue/255,i*gValue/255,i*bValue/255);
+        }
+      }
+      wordPixels.show();
+      delay(fadingDelay);
+    }
+  } else {
+    for ( int k = 1 ; k < Words[0]+1 ; k++ ) {
+      for ( int j=1 ; j < wordPositions[Words[k]][0]+1 ; j++ ){
+        wordPixels.setPixelColor(wordPositions[Words[k]][j],LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+      }
+    }
+    wordPixels.show();
+  }
+}
+
+void writeMinutes(int Minute){
+  if ( minuteFading == true ) {
+    for ( int i = 0 ; i <= LEDbrightness ; i+=fadingStep ){
+      for ( int j=1 ; j < minutePositions[Minute][0]+1 ; j++ ){
+        minutePixels.setPixelColor(minutePositions[Minute][j],i*rValue/255,i*gValue/255,i*bValue/255);
+      }
+      minutePixels.show();
+      delay(fadingDelay);
+    }
+  } else {
+    for ( int j=1 ; j < minutePositions[Minute][0]+1 ; j++ ){
+      minutePixels.setPixelColor(minutePositions[Minute][j],LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+    }
+    minutePixels.show();
+  }
+}
+
+void displayWords(){
+  // start by clearing the display to a known state
+  ledsOff();
+  int Words[6] = {1, 0, 0, 0, 0, 0};
+
+  //Serial.println("");
+  //Serial.print(F("ES IST "));
+
+  // now we display the appropriate minute counter
+  if ((minute>4) && (minute<10)) {
+    // MFUENF;
+    Words[Words[0]+1] = 1;
+    // NACH;
+    Words[Words[0]+2] = 6;
+    Words[0] += 2;
+    //Serial.print(F("FUENF NACH "));
+  }
+  if ((minute>9) && (minute<15)) {
+    // MZEHN;
+    Words[Words[0]+1] = 2;
+    // NACH;
+    Words[Words[0]+2] = 6;
+    Words[0] += 2;
+    //Serial.print(F("ZEHN NACH "));
+  }
+  if ((minute>14) && (minute<20)) {
+    // VIERTEL;
+    Words[Words[0]+1] = 5;
+    // NACH;
+    Words[Words[0]+2] = 6;
+    Words[0] += 2;
+    //Serial.print(F("VIERTEL NACH "));
+  }
+  if ((minute>19) && (minute<25)) {
+    // ZWANZIG;
+    Words[Words[0]+1] = 3;
+    // NACH;
+    Words[Words[0]+2] = 6;
+    Words[0] += 2;
+    //Serial.print(F("ZWANZIG NACH "));
+  }
+  if ((minute>24) && (minute<30)) {
+    // MFUENF;
+    Words[Words[0]+1] = 1;
+    // VOR;
+    Words[Words[0]+2] = 7;
+    // HALB;
+    Words[Words[0]+3] = 8;
+    Words[0] += 3;
+    //Serial.print(F("FUENF VOR HALB "));
+  }
+  if ((minute>29) && (minute<35)) {
+    // HALB;
+    Words[Words[0]+1] = 8;
+    Words[0] += 1;
+    //Serial.print(F("HALB "));
+  }
+  if ((minute>34) && (minute<40)) {
+    // MFUENF;
+    Words[Words[0]+1] = 1;
+    // NACH;
+    Words[Words[0]+2] = 6;
+    // HALB;
+    Words[Words[0]+3] = 8;
+    Words[0] += 3;
+    //Serial.print(F("FUENF NACH HALB "));
+  }
+  if ((minute>39) && (minute<45)) {
+    // ZWANZIG;
+    Words[Words[0]+1] = 3;
+    // VOR;
+    Words[Words[0]+2] = 7;
+    Words[0] += 2;
+    //Serial.print(F("ZWANZIG VOR "));
+  }
+  if ((minute>44) && (minute<50)) {
+    // VIERTEL;
+    Words[Words[0]+1] = 5;
+    // VOR;
+    Words[Words[0]+2] = 7;
+    Words[0] += 2;
+    //Serial.print(F("VIERTEL VOR "));
+  }
+  if ((minute>49) && (minute<55)) {
+    // MZEHN;
+    Words[Words[0]+1] = 2;
+    // VOR;
+    Words[Words[0]+2] = 7;
+    Words[0] += 2;
+    //Serial.print(F("ZEHN VOR "));
+  }
+  if (minute>54) {
+    // MFUENF;
+    Words[Words[0]+1] = 1;
+    // VOR;
+    Words[Words[0]+2] = 7;
+    Words[0] += 2;
+    //Serial.print(F("FUENF VOR "));
+  }
+
+  if (minute <5) {
+    switch (hour) {
+    case 0:
+        // ZWOELF;
+        Words[Words[0]+1] = 9;
+        Words[0] += 1;
+        //Serial.print(F("ZWOELF "));
+        break;
+    case 1:
+      // EIN;
+      Words[Words[0]+1] = 11;
+      Words[0] += 1;
+      //Serial.print(F("EIN "));
+      break;
+    case 2:
+      // ZWEI;
+      Words[Words[0]+1] = 10;
+      Words[0] += 1;
+      //Serial.print(F("ZWEI "));
+      break;
+    case 3:
+      // HDREI;
+      Words[Words[0]+1] = 14;
+      Words[0] += 1;
+      //Serial.print(F("DREI "));
+      break;
+    case 4:
+      // HVIER;
+      Words[Words[0]+1] = 18;
+      Words[0] += 1;
+      //Serial.print(F("VIER "));
+      break;
+    case 5:
+      // HFUENF;
+      Words[Words[0]+1] = 15;
+      Words[0] += 1;
+      //Serial.print(F("FUENF "));
+      break;
+    case 6:
+      // SECHS;
+      Words[Words[0]+1] = 21;
+      Words[0] += 1;
+      //Serial.print(F("SECHS "));
+      break;
+    case 7:
+      // SIEBEN;
+      Words[Words[0]+1] = 13;
+      Words[0] += 1;
+      //Serial.print(F("SIEBEN "));
+      break;
+    case 8:
+      // ACHT;
+      Words[Words[0]+1] = 19;
+      Words[0] += 1;
+      //Serial.print(F("ACHT "));
+      break;
+    case 9:
+      // NEUN;
+      Words[Words[0]+1] = 17;
+      Words[0] += 1;
+      //Serial.print(F("NEUN "));
+      break;
+    case 10:
+      // HZEHN;
+      Words[Words[0]+1] = 20;
+      Words[0] += 1;
+      //Serial.print(F("ZEHN "));
+      break;
+    case 11:
+      // ELF;
+      Words[Words[0]+1] = 16;
+      Words[0] += 1;
+      //Serial.print(F("ELF "));
+      break;
+    case 12:
+      // ZWOELF;
+      Words[Words[0]+1] = 9;
+      Words[0] += 1;
+      //Serial.print(F("ZWOELF "));
+      break;
+    }
+  // UHR;
+  Words[Words[0]+1] = 22;
+  Words[0] += 1;
+  //Serial.print(F("UHR "));
+  } else if ((minute < 25) && (minute >4)) {
+    switch (hour) {
+      case 0:
+        // ZWOELF;
+        Words[Words[0]+1] = 9;
+        Words[0] += 1;
+        //Serial.print(F("ZWOELF "));
+        break;
+      case 1:
+        // EINS;
+        Words[Words[0]+1] = 12;
+        Words[0] += 1;
+        //Serial.print(F("EINS"));
+        break;
+      case 2:
+        // ZWEI;
+        Words[Words[0]+1] = 10;
+        Words[0] += 1;
+        //Serial.print(F("ZWEI "));
+        break;
+      case 3:
+        // HDREI;
+        Words[Words[0]+1] = 14;
+        Words[0] += 1;
+        //Serial.print(F("DREI "));
+        break;
+      case 4:
+        // HVIER;
+        Words[Words[0]+1] = 18;
+        Words[0] += 1;
+        //Serial.print(F("VIER "));
+        break;
+      case 5:
+        // HFUENF;
+        Words[Words[0]+1] = 15;
+        Words[0] += 1;
+        //Serial.print(F("FUENF "));
+        break;
+      case 6:
+        // SECHS;
+        Words[Words[0]+1] = 21;
+        Words[0] += 1;
+        //Serial.print(F("SECHS "));
+        break;
+      case 7:
+        // SIEBEN;
+        Words[Words[0]+1] = 13;
+        Words[0] += 1;
+        //Serial.print(F("SIEBEN "));
+        break;
+      case 8:
+        // ACHT;
+        Words[Words[0]+1] = 19;
+        Words[0] += 1;
+        //Serial.print(F("ACHT "));
+        break;
+      case 9:
+        // NEUN;
+        Words[Words[0]+1] = 17;
+        Words[0] += 1;
+        //Serial.print(F("NEUN "));
+        break;
+      case 10:
+        // HZEHN;
+        Words[Words[0]+1] = 20;
+        Words[0] += 1;
+        //Serial.print(F("ZEHN "));
+        break;
+      case 11:
+        // ELF;
+        Words[Words[0]+1] = 16;
+        Words[0] += 1;
+        //Serial.print(F("ELF "));
+        break;
+      case 12:
+        // ZWOELF;
+        Words[Words[0]+1] = 9;
+        Words[0] += 1;
+        //Serial.print(F("ZWOELF "));
+        break;
+      }
+    } else {
+      // if we are greater than 24 minutes past the hour then display
+      // the next hour, as we will be displaying a 'to' sign
+      switch (hour) {
+        case 0:
+          // EINS;
+          Words[Words[0]+1] = 12;
+          Words[0] += 1;
+          //Serial.print(F("EINS "));
+          break;
+        case 1:
+          // ZWEI;
+          Words[Words[0]+1] = 10;
+          Words[0] += 1;
+          //Serial.print(F("ZWEI "));
+          break;
+        case 2:
+          // HDREI;
+          Words[Words[0]+1] = 14;
+          Words[0] += 1;
+          //Serial.print(F("DREI "));
+          break;
+        case 3:
+          // HVIER;
+          Words[Words[0]+1] = 18;
+          Words[0] += 1;
+          //Serial.print(F("VIER "));
+          break;
+        case 4:
+          // HFUENF;
+          Words[Words[0]+1] = 15;
+          Words[0] += 1;
+          //Serial.print(F("FUENF "));
+          break;
+        case 5:
+          // SECHS;
+          Words[Words[0]+1] = 21;
+          Words[0] += 1;
+          //Serial.print(F("SECHS "));
+          break;
+        case 6:
+          // SIEBEN;
+          Words[Words[0]+1] = 13;
+          Words[0] += 1;
+          //Serial.print(F("SIEBEN "));
+          break;
+        case 7:
+          // ACHT;
+          Words[Words[0]+1] = 19;
+          Words[0] += 1;
+          //Serial.print(F("ACHT "));
+          break;
+        case 8:
+          // NEUN;
+          Words[Words[0]+1] = 17;
+          Words[0] += 1;
+          //Serial.print(F("NEUN "));
+          break;
+        case 9:
+          // HZEHN;
+          Words[Words[0]+1] = 20;
+          Words[0] += 1;
+          //Serial.print(F("ZEHN "));
+          break;
+        case 10:
+          // ELF;
+          Words[Words[0]+1] = 16;
+          Words[0] += 1;
+          //Serial.print(F("ELF "));
+          break;
+        case 11:
+          // ZWOELF;
+          Words[Words[0]+1] = 9;
+          Words[0] += 1;
+          //Serial.print(F("ZWOELF "));
+          break;
+        case 12:
+          // EINS;
+          Words[Words[0]+1] = 12;
+          Words[0] += 1;
+          //Serial.print(F("EINS "));
+          break;
+      }
+   }
+   writeWords(Words);
+}
+
+void displayMinutes(){
+   minutesOff();
+   // In order to make use of the four minute LEDs
+   if (minute % 5 == 1) {
+    writeMinutes(0);
+//    Serial.print(F("+1 "));
+  }
+  if (minute % 5 == 2) {
+    writeMinutes(1);
+//    Serial.print(F("+2 "));
+  }
+  if (minute % 5 == 3) {
+    writeMinutes(2);
+//    Serial.print(F("+3 "));
+  }
+  if (minute % 5 == 4) {
+    writeMinutes(3);
+//    Serial.print(F("+4"));
+  }
+}
+
+void getTime(){
+  /*DateTime now = RTC.now();*/
+
+  //hour = now.hour();
+  //minute = now.minute();
+  //second = now.second();
+  hour = 5;
+  minute = 2;
+  second = 2;
+
+  if (daylightSaving()){
+   hour += 1;
+  }
+  //   else{
+  //     hour += 1;
+  //   }
+
+  if (hour > 12){
+   hour -= 12;
+  }
+}
 
 void connTOwifi(){
   if (WiFi.SSID()) {
@@ -554,6 +1096,7 @@ void checkConfigmode(){
 void handleRoot() {
 if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "FileNotFound");
 }
+
 void setup() {
   //debugMSG.begin(115200);
 
@@ -592,7 +1135,16 @@ void setup() {
   server.begin();
   MDNS.begin("wordclock");
 
-
+  // Initialize the LEDs
+  wordPixels.setBrightness(LEDbrightness);
+  minutePixels.setBrightness(LEDbrightness);
+  wordPixels.begin();
+  wordPixels.show();
+  minutePixels.begin();
+  minutePixels.show();
+  getTime();
+  displayWords();
+  displayMinutes();
 
 }
 
@@ -600,10 +1152,109 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
 
-  //AP mode selected?
   webSocket.loop();
   server.handleClient();
-  // put your main code here, to run repeatedly:
 
+  // put your main code here, to run repeatedly:
+  unsigned int lastsec = second;
+
+  getTime();
+
+  // To refresh the display once [ second == 0 && abs(second-lastsec)!=0 ] every five minutes [ minute % 5 == 0  ; note: 0 modulo 5 = 0 ]
+  if (minute % 5 ==0 && second == 0 && abs(second-lastsec)!=0){
+    displayWords();
+  }
+
+  // To make use of the four minute LEDs
+  if (second == 0 && abs(second-lastsec)!=0 && minute % 5 != 0){
+    displayMinutes();
+  }
+
+  if (digitalRead(IncBrightPin) == LOW){ //increase brightness
+    if ((LEDbrightness+10) <= maxBrightness){
+        LEDbrightness += 10;
+    }
+    else{
+        LEDbrightness = maxBrightness;
+    }
+    // set the new brightness on all LEDs that are on
+    for ( int j = 0 ; j < wordLEDS ; j++ ){                 // every LED...
+      if ( wordPixels.getPixelColor(j) != 0){               // that is not off (has a colour)
+        wordPixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+      }
+    }
+    for ( int j = 0 ; j < minuteLEDS ; j++ ){
+      if ( minutePixels.getPixelColor(j) != 0){
+        minutePixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+      }
+    }
+    wordPixels.show();
+    minutePixels.show();
+    delay(500);
+  }
+
+
+  if (digitalRead(RedBrightPin) == LOW){//decrease brightness
+    if ((LEDbrightness) >= 30) {//minimum brightness
+        LEDbrightness -= 10;
+    }
+    // set the new brightness on all LEDs that are on
+    for ( int j = 0 ; j < wordLEDS ; j++ ){                 // every LED...
+      if ( wordPixels.getPixelColor(j) != 0){               // that is not off (has a colour)
+        wordPixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+      }
+    }
+    for ( int j = 0 ; j < minuteLEDS ; j++ ){
+      if ( minutePixels.getPixelColor(j) != 0){
+        minutePixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+      }
+    }
+    wordPixels.show();
+    minutePixels.show();
+    delay(500);
+  }
+
+  if (digitalRead(colourChangePin) == LOW){
+    if(colourChange < 8 ){
+      colourChange++;
+    }
+    else {
+      colourChange = 0;
+    }
+
+    Serial.println("");
+    Serial.print(F("Setting colour to: "));
+    Serial.print(colourName[colourChange]);
+    rValue = colours[colourChange][0];
+    gValue = colours[colourChange][1];
+    bValue = colours[colourChange][2];
+    Serial.print(F("; rValue: "));
+    Serial.print(rValue);
+    Serial.print(F("; gValue: "));
+    Serial.print(gValue);
+    Serial.print(F("; bValue: "));
+    Serial.print(bValue);
+
+    // set the new colour on all LEDs that are on
+    for ( int j = 0 ; j < wordLEDS ; j++ ){                 // every LED
+      if ( wordPixels.getPixelColor(j) != 0){               // that is not off
+        wordPixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+      }
+    }
+    for ( int j = 0 ; j < minuteLEDS ; j++ ){
+      if ( minutePixels.getPixelColor(j) != 0){
+        minutePixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+      }
+    }
+    wordPixels.show();
+    minutePixels.show();
+    delay(500);
+  }
+
+  if (digitalRead(colourCyclePin) == LOW){
+    Serial.println("");
+    Serial.print(F("Cycling colour, not yet implemented"));
+    delay(500);
+  }
 }
 //pio run --verbose -e nodemcu -t upload --upload-port 192.168
