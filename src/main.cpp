@@ -19,6 +19,7 @@ https://github.com/esp8266/Arduino/tree/master/libraries
 #include "JsonStreamingParser.h"
 #include "JsonListener.h"
 #include "ExampleParser.h"
+#include "Adafruit_NeoPixel.h"
 JsonStreamingParser parser;
 ExampleListener listener;
 //#include <FSbrowser.h>
@@ -44,6 +45,91 @@ ESP8266WebServer server = ESP8266WebServer(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 ESP8266HTTPUpdateServer httpUpdater;
 File fsUploadFile;
+
+unsigned int  hour=00, minute=4, second=00;
+
+#define wordPIN D1
+#define wordLEDS 110
+#define minutePIN D2
+#define minuteLEDS 4
+Adafruit_NeoPixel wordPixels = Adafruit_NeoPixel(wordLEDS, wordPIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel minutePixels = Adafruit_NeoPixel(minuteLEDS, minutePIN, NEO_GRB + NEO_KHZ800);
+int colourChangePin = 6;
+int colourChange = 0;
+int colourCyclePin = 8;
+
+// 80┌--> F N Ü F <-- T S I <-- S E                88   ES IST MFÜNF
+// 79└--  G I Z N A W Z --> N H E Z          <--┐ 69   MZEHN ZWANZIG
+// 62┌--> L E T R E I V <-- (I E R D)         --┘ 68   DREI VIERTEL
+// 61└--  R O V --> H C A N                  <--┐ 55   NACH VOR
+// 46┌--> F L Ö W Z <-- B L A H               --┘ 54   HALB ZWÖLF
+// 45└--  N E B E I <-- S <-- N I E <-- W Z  <--┐ 35   ZWEI EIN SIEBEN
+// 27┌--> F N Ü F --> I E R D                 --┘ 34   HDREI HFÜNF
+// 26└--  R E I V <-- N U E N <-- F L E      <--┐ 16   ELF NEUN HVIER
+// 8 ┌--> N H E Z --> T H C A                 --┘ 15   ACHT HZEHN
+// 7 └--  R H U  <-- S H C E S                <--   0   SECHS UHR
+
+// 109-- F N Ü F <-- T S I <-- S E           <-- 99   ES IST MFÜNF          convert address to complete pixel matrix
+// 98 --  G I Z N A W Z <-- N H E Z          <-- 88   MZEHN ZWANZIG
+// 87 -- L E T R E I V <-- (I E R D)         <-- 77   DREI VIERTEL
+// 76 --  R O V <-- H C A N                  <-- 66   NACH VOR
+// 65 -- F L Ö W Z <-- B L A H               <-- 55   HALB ZWÖLF
+// 54 --  N E B E I <-- S <-- N I E <-- W Z  <-- 44   ZWEI EIN SIEBEN
+// 43 -- F N Ü F <-- I E R D                 <-- 33   HDREI HFÜNF
+// 32 --  R E I V <-- N U E N <-- F L E      <-- 22   ELF NEUN HVIER
+// 21 --   N H E Z <-- T H C A               <-- 11    ACHT HZEHN
+// 10 --  R H U  <-- S H C E S               <--  0    SECHS UHR
+
+const int wordPositions[][8] = {{5 , 99, 100, 102, 103, 104, 0 , 0 }, // 5 LEDs total, Position 0,1,2,3,4 in the string   => 0: ES IST
+                                {4 , 106, 107, 108, 109, 0 , 0 , 0 }, // 4 LEDs total, Position 5,6,7,8 in the string     => 1: MFÜNF
+                                {4 , 88, 89, 90, 91, 0 , 0 , 0 }, //                                                  => 2: MZEHN
+                                {7 , 92, 93, 94, 95, 96, 97, 98}, //                                                  => 3: ZWANZIG
+                                {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 }, // Not used in west german                          => 4: DREI
+                                {7 , 81, 82, 83, 84, 85, 86, 87}, //                                                  => 5: VIERTEL
+                                {4 , 68, 69, 70, 71, 0 , 0 , 0 }, //                                                  => 6: NACH
+                                {3 , 72, 73, 74, 0 , 0 , 0 , 0 }, //                                                  => 7: VOR
+                                {4 , 55, 56, 57, 58, 0 , 0 , 0 }, //                                                  => 8: HALB
+                                {5 , 60, 61, 62, 63, 64, 0 , 0 }, //                                                  => 9: ZWÖLF
+                                {4 , 44, 45, 46, 47, 0 , 0 , 0 }, //                                                  => 10: ZWEI
+                                {3 , 46, 47, 48, 0 , 0 , 0 , 0 }, //                                                  => 11: EIN
+                                {4 , 46, 47, 48, 49, 0 , 0 , 0 }, //                                                  => 12: EINS
+                                {6 , 49, 50, 51, 52, 53, 54, 0 }, //                                                  => 13: SIEBEN
+                                {4 , 34, 35, 36, 37, 0 , 0 , 0 }, //                                                  => 14: HDREI
+                                {4 , 40, 41, 42, 43, 0 , 0 , 0 }, //                                                  => 15: HFÜNF
+                                {3 , 22, 23, 24, 0 , 0 , 0 , 0 }, //                                                  => 16: ELF
+                                {4 , 25, 26, 27, 28, 0 , 0 , 0 }, //                                                  => 17: NEUN
+                                {4 , 29, 30, 31, 32, 0 , 0 , 0 }, //                                                  => 18: HVIER
+                                {4 , 12, 13, 14, 15, 0 , 0 , 0 }, //                                                  => 19: ACHT
+                                {4 , 16, 17, 18, 19, 0 , 0 , 0 }, //                                                  => 20: HZEHN
+                                {5 , 2 , 3 , 4 , 5 , 6 , 0 , 0 }, //                                                  => 21: SECHS
+                                {3 , 9 , 10, 11, 0 , 0 , 0 , 0 } //                                                   => 22: UHR
+};
+
+// MZWEI  <-- MEINS
+//   |          ^
+//   |          |
+//   v          |
+// MDREI      MVIER <-- 0
+
+const int minutePositions[][5] = {{1 , 1 , 0 , 0 , 0},                                                            //  => MEINS
+                                  {2 , 1 , 2 , 0 , 0},                                                            //  => MEINS, MZWEI
+                                  {3 , 1 , 2 , 3 , 0},                                                            //  => MEINS, MZWEI, MDREI
+                                  {4 , 0 , 1 , 2 , 3}                                                             //  => MEINS, MZWEI, MDREI
+};
+
+
+const int colours[][3] = {{255, 255, 255},                                                                        // WHITE
+                          {255, 0  ,   0},                                                                        // RED
+                          {0  , 255,   0},                                                                        // GREEN
+                          {0  , 0  , 255},                                                                        // BLUE
+                          {255, 135, 0  },                                                                        // ORANGE
+                          {255, 255, 0  },                                                                        // YELLOW
+                          {0  , 255, 255},                                                                        // CYAN
+                          {128, 0  , 128},                                                                        // PURPLE
+                          {139, 99 , 108}                                                                         // PINK
+};
+
+const char* colourName[9] = {"WHITE","RED","GREEN","BLUE","ORANGE","YELLOW","CYAN","PURPLE","PINK"};
 
 void connTOwifi(){
   if (WiFi.SSID()) {
@@ -333,6 +419,21 @@ void initServer(){
     //server.send(200, "text/html", serverIndex);
   });
   server.on("/upload", HTTP_POST, [](){ server.send(200, "text/plain", "uploading"); }, handleFileUpload);
+  server.on("/", HTTP_GET, [](){
+    if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "PageNotFound");
+  });
+  server.on("/ledcolor", HTTP_GET, [](){
+    if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", "PageNotFound");
+  });
+  server.on("/test", HTTP_GET, [](){
+    if(!handleFileRead("/test.htm")) server.send(404, "text/plain", "PageNotFound");
+  });
+  server.on("/mode", HTTP_GET, [](){
+    if(!handleFileRead("/mode.htm")) server.send(404, "text/plain", "PageNotFound");
+  });
+  server.on("/message", HTTP_GET, [](){
+    if(!handleFileRead("/message.htm")) server.send(404, "text/plain", "PageNotFound");
+  });
 
 }
 
@@ -492,15 +593,7 @@ void setup() {
   MDNS.begin("wordclock");
 
 
-  server.on("/", HTTP_GET, [](){
-    if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "PageNotFound");
-  });
-  server.on("/ledcolor", HTTP_GET, [](){
-    if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", "PageNotFound");
-  });
-  server.on("/test", HTTP_GET, [](){
-    if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", "PageNotFound");
-  });
+
 }
 
 
