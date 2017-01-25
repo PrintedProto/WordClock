@@ -99,17 +99,13 @@ boolean minuteFading = true;
 int fadingDelay = 20;
 int fadingStep = 1;
 
-/*
+
 // For DS3231 RTC
-#include <Wire.h>
-#include "RTClib.h"
+#include <Wire.h>               //I2C library
+#include "RtcDS3231.h"    //RTC library
 
 RTC_DS3231 RTC;
-// For Arduino Uno
-//int RTC_VCC = 17;
-//int RTC_GND = 16;
-int RTC_VCC = 5;
-*/
+
 
 
 boolean daylightSaving()

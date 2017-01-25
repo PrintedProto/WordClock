@@ -24,7 +24,7 @@ https://github.com/esp8266/Arduino/tree/master/libraries
 #include <Wire.h>               //I2C library
 #include "RtcDS3231.h"    //RTC library
 
-RTC_DS3231 RTC;
+RtcDS3231<TwoWire> RTC(Wire); //SDA D2 SCL D1
 JsonStreamingParser parser;
 ExampleListener listener;
 //#include <FSbrowser.h>
