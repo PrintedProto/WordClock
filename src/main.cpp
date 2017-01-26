@@ -1003,6 +1003,73 @@ void handleWifimode(){
           ESP.reset();
         }
     }
+
+void handleRoot() {
+const char html1[] =R"(
+              <html>
+              <head>
+                 <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+                 <title>Wordclock</title>
+                 <script type='text/javascript' src='graphs.js'></script>
+                 <script type='text/javascript'>
+                 </script>
+              </head>
+              <body id='index' style='margin:0; padding:0;' onload='onBodyLoad()'>
+
+            )";
+char html2[] ="<div id='heap' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(%02d, %02d, %02d);'>";
+
+const char html3[] =R"(
+
+              <header>Wordclock</header><br><br>
+              <form action='/ledcolor' method='get'>
+                <label>Set Color</label><br>
+                <input type='text' name='hex'>
+                <input type='submit' value='set'><br><br>
+              </form>
+
+              <form action='/brightness' method='post' oninput='x.value=parseInt(bri.value)'>
+                <label>Brightness</label><br>
+                0
+                <input type='range' id='bri' name='bri' value='50'>
+                100
+                <input type='submit' value='set'><output name="x" for="bri"></output><br><br>
+              </form>
+            </div>
+
+            <div id='controls' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
+              <label>Set time</label>
+              <form>
+           First name:<br>
+           <input type='text' name='firstname'><br>
+           Last name:<br>
+           <input type='text' name='lastname'>
+          </form>
+            </div>
+            <div id='analog'><label>Settings</label>
+            <form action="/settings" method="get">
+                <button name="settings" value="1">Settings</button>This will restart the device
+            </form></div>
+            <div id='digital'></div>
+          </body>
+          </html>
+              )";
+  //char html[] = "rgb(%02d, %02d, %02d)";
+  char buff[300];
+  debugMSG.println("sprintf");
+  snprintf (buff, 300, html2, rValue, gValue, bValue);
+  //server.send (200, "text/html", buff);
+  char indexhtml[2000];
+  debugMSG.println("strcat1");
+  strcat(indexhtml,html1);
+  debugMSG.println("strcat2");
+  strcat(indexhtml,buff);
+  debugMSG.println("strcat3");
+  strcat(indexhtml,html3);
+  debugMSG.println("ssend");
+  server.send (200, "text/html", indexhtml);
+
+}
 void handleLedcolor(){
   debugMSG.println("handleLedcolor");
   rValue = server.arg("r").toInt();
@@ -1014,58 +1081,8 @@ void handleLedcolor(){
   debugMSG.println(gValue);
   debugMSG.print("bValue = ");
   debugMSG.println(bValue);
-  if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "PageNotFound");
-}
-void handleRoot() {
-const char html[] =""
-              "<html>"
-              "<head>"
-                " <meta http-equiv='Content-type' content='text/html; charset=utf-8'>"
-                " <title>Wordclock</title>"
-                " <script type='text/javascript' src='graphs.js'></script>"
-                " <script type='text/javascript'>"
-                " </script>"
-              "</head>"
-              "<body id='index' style='margin:0; padding:0;' onload='onBodyLoad()'>"
-              "  <div id='heap' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(%02d, %02d, %02d);'>"
-              "<header>Wordclock</header><br><br>"
-              "<form action='/ledcolor' method='get'>"
-              "  <label>Set Color</label><br>"
-              "  <input type='text' name='hex'>"
-              "  <input type='submit' value='set'><br><br>"
-              "</form>"
-              " "
-              "<form action='/brightness' method='post' oninput='x.value=parseInt(bri.value)'>"
-              "  <label>Brightness</label><br>"
-              "  0"
-              "  <input type='range' id='bri' name='bri' value='50'>"
-              "  100"
-              "  <br><br>"
-              "  <input type='submit' value='set'>"
-              "</form>"
-            "</div>"
-             " "
-            "<div id='controls' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>"
-            "  <label>Set time</label>"
-            "  <form>"
-          " First name:<br>"
-          " <input type='text' name='firstname'><br>"
-          " Last name:<br>"
-          " <input type='text' name='lastname'>"
-          "</form>"
-          "  </div>"
-          "  <div id='heap'></div"
-          "  <div id='analog'></div>"
-          "  <div id='digital'></div>"
-          "</body>"
-          "</html>"
-              "";
-  //char html[] = "rgb(%02d, %02d, %02d)";
-  char buff[2000];
-  snprintf (buff, 2000, html, rValue, gValue, bValue);
-  server.send (200, "text/html", buff);
-
-
+  //if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "PageNotFound");
+  handleRoot;
 }
 void initServer(){
   //SERVER INIT
