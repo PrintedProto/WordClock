@@ -10,7 +10,7 @@ https://github.com/esp8266/Arduino/tree/master/libraries
 #include <ESP8266mDNS.h>
 #include <WebSocketsServer.h>  //https://github.com/Links2004/arduinoWebSockets
 #include <ESP8266WebServer.h>
-#include <ESP8266HTTPUpdateServer.h>
+#include "ESP8266HTTPUpdateServer.h"
 #include "WiFiManager.h"          //https://github.com/tzapu/WiFiManager
 #include <ArduinoJson.h>      //https://github.com/bblanchon/ArduinoJson
 #include <WiFiUdp.h>
@@ -48,14 +48,16 @@ volatile byte mgrmodeSelect; //1 means wifimgr mode is selected
 
 ESP8266WebServer server = ESP8266WebServer(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
+const byte DNS_PORT = 53;
+DNSServer dnsServer;
 ESP8266HTTPUpdateServer httpUpdater;
 File fsUploadFile;
 
 unsigned int  hour=00, minute=4, second=00; //start led code, ends line 669
 
-#define wordPIN D1
+#define wordPIN D6
 #define wordLEDS 110
-#define minutePIN D2
+#define minutePIN D7
 #define minuteLEDS 4
 Adafruit_NeoPixel wordPixels = Adafruit_NeoPixel(wordLEDS, wordPIN, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel minutePixels = Adafruit_NeoPixel(minuteLEDS, minutePIN, NEO_GRB + NEO_KHZ800);
@@ -136,8 +138,13 @@ const int colours[][3] = {{255, 255, 255},                                      
 
 const char* colourName[9] = {"WHITE","RED","GREEN","BLUE","ORANGE","YELLOW","CYAN","PURPLE","PINK"};
 
+/*
+const int numAsPixels[][8] = {{5 , 99, 100, 102, 103, 104, 0 , 0 }, // 5 LEDs total, Position 0,1,2,3,4 in the string   => 0: ES IST
+                                {4 , 106, 107, 108, 109, 0 , 0 , 0 }, // 4 LEDs total, Position 5,6,7,8 in the string     => 1: MFÜNF
+                                {4 , 88, 89, 90, 91, 0 , 0 , 0 }
+                              };*/
 // To adjust the brightness
-int LEDbrightness = 30;                                  // base LED brightness, value between 1 - 255 (with 255 being the brightest)
+int LEDbrightness = 30;                                  // base LED brightness, value between 1 - 255 (with 255 being the brightest) (1023 for esp)
 int maxBrightness = 200;                                // limit the maximum brightness to lower stress on the LEDs
 int IncBrightPin=7;
 int RedBrightPin=9;
@@ -676,7 +683,7 @@ void getTime(){
 void connTOwifi(){
   if (WiFi.SSID()) {
     WiFi.mode(WIFI_STA);
-    //debugMSG.println("Using saved wifi credentials");
+    debugMSG.println("Using saved wifi credentials");
     //trying to fix connection in progress hanging
     ETS_UART_INTR_DISABLE();
     wifi_station_disconnect();
@@ -685,25 +692,33 @@ void connTOwifi(){
     WiFi.begin();
     for (byte i = 0; i<5; i++){ //will try to connect 5 times in 10 seconds
       if(WiFi.waitForConnectResult() != WL_CONNECTED) {
-        //debugMSG.println("Connection Failed!");
+        debugMSG.println("Connection Failed!");
         delay(2000);
       }
       else {
-        //debugMSG.println("Connection Success");
-        //debugMSG.print("LAN IP address: ");
+        debugMSG.println("Connection Success");
+        debugMSG.print("LAN IP address: ");
         IPAddress myIP = WiFi.localIP();
-        //debugMSG.println(myIP);
+        debugMSG.println(myIP);
         break;
       }
     }
   }
-  else { //wifi manager requested
-    WiFiManager wifiManager; //Local intialization. Once its business is done, there is no need to keep it around
-        if (!wifiManager.startConfigPortal("AP_Wordclock")) {
-      //debugMSG.println("failed to connect... timeout");
-      delay(3000);
-      ESP.reset();//reset and try again, or maybe put it to deep sleep
+  else { //no valid ssid credentials saved
+    debugMSG.println("no valid credentials saved");
+    {
+    File f = SPIFFS.open(apmodefile, "w");
+      if(f){//verifies that file opened successfully
+        f.print(0); //0 means ap mode is selected, default config
+        f.close();
+      }
+      else{
+        //file failed to open
+      }
+      //ESP.restart();
+      debugMSG.println("restarting into ap mode");
       delay(5000);
+      ESP.reset();
     }
   }
 }
@@ -904,6 +919,7 @@ void handleFileList() {
   output += "]";
   server.send(200, "text/json", output);
 }
+
 void handleJSON(){
   //Serial.println(String(ESP.getFreeHeap()));
   parser.setListener(&listener);
@@ -913,6 +929,143 @@ void handleJSON(){
     parser.parse(json[i]);
   }
   //Serial.println(String(ESP.getFreeHeap()));
+}
+
+void handleWifimode(){
+
+      debugMSG.println("handleWifimode");
+      switch(server.arg("Wifimode").toInt()){// do something here with value from server.arg(name) then convert string data to int by appending .toint
+          debugMSG.println("Server arg wifimode: ");
+          debugMSG.println(server.arg("Wifimode").toInt());
+          case 0: //ap mode selected
+          {
+            File f = SPIFFS.open(apmodefile, "w");
+              if(f){//verifies that file opened successfully
+                f.print(0); //0 means ap mode is selected, default config
+                f.close();
+                //ESP.restart();
+                server.send(200, "text/plain", "restarting");
+                delay(5000);
+                ESP.reset();
+              }
+              else{
+                server.send(200, "text/plain", "mode change failed");
+              }
+            }
+            break;
+          case 1: //wifi client mode selected
+          {
+            File f = SPIFFS.open(apmodefile, "w");
+              if(f){//verifies that file opened successfully
+                f.print(1); //1 means wifi client mode is selected, default config
+                f.close();
+                //ESP.restart();
+                server.send(200, "text/plain", "restarting");
+                delay(5000);
+                ESP.reset();
+              }
+              else{
+                server.send(200, "text/plain", "mode change failed");
+              }
+            }
+            break;
+          case 2:
+          debugMSG.println("Wifi Man mode triggered");
+          {
+            File f = SPIFFS.open(apmodefile, "w");
+              if(f){//verifies that file opened successfully
+                f.print(1); //1 means wifi client mode is selected, default config
+                f.close();
+              }
+              else{
+                server.send(200, "text/plain", "mode change failed");
+              }
+            }
+            {
+            File f = SPIFFS.open(mgrmodefile, "w");
+              if(f){//verifies that file opened successfully
+                f.print(1); //1 means wifi client mode is selected, default config
+                f.close();
+                //ESP.restart();
+                server.send(200, "text/plain", "restarting");
+                delay(5000);
+                ESP.reset();
+              }
+              else{
+                  server.send(200, "text/plain", "mode change failed");
+              }
+            }
+            break;
+        }
+        if(server.arg("Wifimode").toInt()){
+          server.send(200, "text/plain", "restarting");
+          delay(5000);
+          ESP.reset();
+        }
+    }
+void handleLedcolor(){
+  debugMSG.println("handleLedcolor");
+  rValue = server.arg("r").toInt();
+  gValue = server.arg("g").toInt();
+  bValue = server.arg("b").toInt();
+  debugMSG.print("rValue = ");
+  debugMSG.println(rValue);
+  debugMSG.print("gValue = ");
+  debugMSG.println(gValue);
+  debugMSG.print("bValue = ");
+  debugMSG.println(bValue);
+  if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "PageNotFound");
+}
+void handleRoot() {
+const char html[] =""
+              "<html>"
+              "<head>"
+                " <meta http-equiv='Content-type' content='text/html; charset=utf-8'>"
+                " <title>Wordclock</title>"
+                " <script type='text/javascript' src='graphs.js'></script>"
+                " <script type='text/javascript'>"
+                " </script>"
+              "</head>"
+              "<body id='index' style='margin:0; padding:0;' onload='onBodyLoad()'>"
+              "  <div id='heap' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(%02d, %02d, %02d);'>"
+              "<header>Wordclock</header><br><br>"
+              "<form action='/ledcolor' method='get'>"
+              "  <label>Set Color</label><br>"
+              "  <input type='text' name='hex'>"
+              "  <input type='submit' value='set'><br><br>"
+              "</form>"
+              " "
+              "<form action='/brightness' method='post' oninput='x.value=parseInt(bri.value)'>"
+              "  <label>Brightness</label><br>"
+              "  0"
+              "  <input type='range' id='bri' name='bri' value='50'>"
+              "  100"
+              "  <br><br>"
+              "  <input type='submit' value='set'>"
+              "</form>"
+            "</div>"
+             " "
+            "<div id='controls' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>"
+            "  <label>Set time</label>"
+            "  <form>"
+          " First name:<br>"
+          " <input type='text' name='firstname'><br>"
+          " Last name:<br>"
+          " <input type='text' name='lastname'>"
+          "</form>"
+          "  </div>"
+          "  <div id='heap'></div"
+          "  <div id='analog'></div>"
+          "  <div id='digital'></div>"
+          "</body>"
+          "</html>"
+              "";
+  //char html[] = "rgb(%02d, %02d, %02d)";
+  char buff[2000];
+  snprintf (buff, 2000, html, rValue, gValue, bValue);
+  server.send (200, "text/html", buff);
+
+
 }
 void initServer(){
   //SERVER INIT
@@ -935,7 +1088,12 @@ void initServer(){
     //use it to load content from SPIFFS
     server.onNotFound([](){
       if(!handleFileRead(server.uri()))
-        server.send(404, "text/plain", "FileNotFound");
+        server.send(200, "text/html", R"(<html><body><label>File not found</label><br><br>
+                      <br><br>
+                       <form method='GET' action='/' >
+                           <input type='submit' value='Home'>
+                        </form><br><br>
+                 </body></html>)");
     });
 
     //get heap status, analog input value and all GPIO statuses in one json call
@@ -951,6 +1109,7 @@ void initServer(){
   server.on("/sendJSON", handleJSON);
   server.on("/upload", HTTP_GET, []() {
     const char* UploadHTML = R"(<html><body><form method='POST' action='' enctype='multipart/form-data'>
+                  Upload a file<br>
                   <input type='file' name='upload'>
                   <input type='submit' value="upload">
                </form>
@@ -961,9 +1120,7 @@ void initServer(){
     //server.send(200, "text/html", serverIndex);
   });
   server.on("/upload", HTTP_POST, [](){ server.send(200, "text/plain", "uploading"); }, handleFileUpload);
-  server.on("/", HTTP_GET, [](){
-    if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "PageNotFound");
-  });
+  server.on("/", HTTP_GET, handleRoot);
   server.on("/ledcolor", HTTP_GET, [](){
     if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", "PageNotFound");
   });
@@ -976,6 +1133,12 @@ void initServer(){
   server.on("/message", HTTP_GET, [](){
     if(!handleFileRead("/message.htm")) server.send(404, "text/plain", "PageNotFound");
   });
+  server.on("/settings", HTTP_GET, [](){
+    if(!handleFileRead("/settings.htm")) server.send(404, "text/plain", "PageNotFound");
+  });
+  server.on("/settings", HTTP_POST, handleWifimode);
+  server.on("/ledcolor", HTTP_POST, handleLedcolor);
+
 
 }
 
@@ -996,7 +1159,7 @@ void checkConfigmode(){
     File f = SPIFFS.open(apmodefile, "r"); //file exists open as readonly
     if(f){//verifies that file opened successfully
       apmodeSelect = f.parseInt(); //parse first integer in file
-      if(apmodeSelect || !apmodeSelect){ //if integer is one or zero file is good, close file, continue program
+      if(0 || 1){ //if integer is one or zero file is good, close file, continue program
         f.close();
         }
       else{
@@ -1033,7 +1196,7 @@ void checkConfigmode(){
     File f = SPIFFS.open(otamodefile, "r"); //file exists open as readonly
     if(f){//verifies that file opened successfully
       otamodeSelect = f.parseInt(); //parse first integer in file
-      if(otamodeSelect || !otamodeSelect){ //if integer is one or zero file is good, close file, continue program
+      if(0 || 1){ //if integer is one or zero file is good, close file, continue program
         f.close();
         }
       else{
@@ -1070,7 +1233,7 @@ void checkConfigmode(){
     File f = SPIFFS.open(mgrmodefile, "r"); //file exists open as readonly
     if(f){//verifies that file opened successfully
       mgrmodeSelect = f.parseInt(); //parse first integer in file
-      if(mgrmodeSelect || !mgrmodeSelect){ //if integer is one or zero file is good, close file, continue program
+      if(0 || 1){ //if integer is one or zero file is good, close file, continue program
         f.close();
         }
       else{
@@ -1093,31 +1256,61 @@ void checkConfigmode(){
   }//mgrmodefile
 }
 
-void handleRoot() {
-if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "FileNotFound");
-}
+
 
 void setup() {
-  //debugMSG.begin(115200);
+  //Serial.begin(115200);
+  debugMSG.begin(115200);
 
   SPIFFS.begin();
   checkConfigmode();
 
   if (apmodeSelect && !mgrmodeSelect){
+    debugMSG.println("Connecting to wifi");
     connTOwifi();
+    if(WiFi.waitForConnectResult() != WL_CONNECTED) {
+      debugMSG.println("no valid credentials saved");
+      {
+      File f = SPIFFS.open(apmodefile, "w");
+        if(f){//verifies that file opened successfully
+          f.print(0); //0 means ap mode is selected, default config
+          f.close();
+        }
+        else{
+          //file failed to open
+        }
+        //ESP.restart();
+        debugMSG.println("restarting into ap mode");
+        delay(5000);
+        ESP.reset();
+      }
+    }
   }
   else if (!apmodeSelect && !mgrmodeSelect){
-    //debugMSG.println("Access Point Mode selected");
+    debugMSG.println("Access Point Mode selected");
     WiFi.mode(WIFI_AP);
     //WIFI INIT AP mode
-    WiFi.softAP("WordClock");
+    WiFi.softAP("AP_WordClock");
     IPAddress myIP = WiFi.softAPIP();
-    //debugMSG.print("AP IP address: ");
-    //debugMSG.println(myIP);
+    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+    dnsServer.start(DNS_PORT, "*", myIP);
+    debugMSG.print("AP IP address: ");
+    debugMSG.println(myIP);
   }
   else{ //means mgrmodeselect is set to true
+    debugMSG.println("Starting wifi manager");
+    {//mgrmodefile printedproto
+      File f = SPIFFS.open("/mode/mgrmode.txt", "w"); //file exists overwrite
+      if(f){//verifies that file opened successfully
+        f.print(0); //turn off wifi mgr flag
+        f.close();
+              }
+      else{
+          //file failed to open
+        }
+      }
     WiFiManager wifiManager; //Local intialization. Once its business is done, there is no need to keep it around
-        if (!wifiManager.startConfigPortal("AP_Wordclock")) {
+        if (!wifiManager.startConfigPortal("mgr_Wordclock")) {
       //debugMSG.println("failed to connect... timeout");
       delay(3000);
       ESP.reset();//reset and try again, or maybe put it to deep sleep
@@ -1134,6 +1327,9 @@ void setup() {
   initServer();
   server.begin();
   MDNS.begin("wordclock");
+  MDNS.addService("http", "tcp", 80);
+
+
 
   // Initialize the LEDs
   wordPixels.setBrightness(LEDbrightness);
@@ -1151,10 +1347,10 @@ void setup() {
 
 void loop() {
   ArduinoOTA.handle();
-
+  //debugMSG.println("loop");
   webSocket.loop();
   server.handleClient();
-
+  dnsServer.processNextRequest();
   // put your main code here, to run repeatedly:
   unsigned int lastsec = second;
 
@@ -1169,7 +1365,7 @@ void loop() {
   if (second == 0 && abs(second-lastsec)!=0 && minute % 5 != 0){
     displayMinutes();
   }
-
+/*
   if (digitalRead(IncBrightPin) == LOW){ //increase brightness
     if ((LEDbrightness+10) <= maxBrightness){
         LEDbrightness += 10;
@@ -1255,6 +1451,6 @@ void loop() {
     Serial.println("");
     Serial.print(F("Cycling colour, not yet implemented"));
     delay(500);
-  }
+  }*/
 }
 //pio run --verbose -e nodemcu -t upload --upload-port 192.168

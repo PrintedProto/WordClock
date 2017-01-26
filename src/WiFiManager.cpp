@@ -189,28 +189,7 @@ boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPasswo
         //connected
         WiFi.mode(WIFI_STA);
         //notify that configuration has changed and any optional parameters should be saved
-        {//mgrmodefile printedproto
-        if(!SPIFFS.exists("/mode/mgrmode.txt")){ //check if mgrmode file exists, if not create it
-          File f = SPIFFS.open("/mode/mgrmode.txt", "w");
-            if(f){//verifies that file opened successfully
-          f.print(0); //1 means wifi mgr mode is selected, default config 0
-          f.close();
-            }
-            else{
-              //file failed to open
-            }
-          }
-        else{
-          File f = SPIFFS.open("/mode/mgrmode.txt", "w"); //file exists overwrite
-          if(f){//verifies that file opened successfully
-            f.print(0); //turn off wifi mgr flag
-            f.close();
-                  }
-          else{
-              //file failed to open
-            }
-          }
-        }//mgrmodefile
+        
         if ( _savecallback != NULL) {
           //todo: check if any custom parameters actually exist, and check if they really changed maybe
           _savecallback();

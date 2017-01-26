@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>Wordclock</title>
+  <script type="text/javascript" src="graphs.js"></script>
+  <script type="text/javascript">
+
+  </script>
+</head>
+<body id="index" style="margin:0; padding:0;" onload="onBodyLoad()">
+  <div id="controls" style="display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 500px; background-color: rgb(238, 238, 238);">
+    <label>WIFI Mode</label>
+    <form action="/settings" method="post">
+        <input type="radio" name="Wifimode" value="0" checked> Access Point
+        <input type="radio" name="Wifimode" value="1"> Client
+        <input type="submit" value="submit"> This will restart the device
+    </form>
+    <br>
+    <br>
+    <label>Setup Wifi Credentials</label>
+    <form action="/settings" method="post">
+        <button name="Wifimode" value="2">Wifi Manager</button>This will restart the device
+    </form>
+    <br>
+    <br>
+    <label>Restart the device</label>
+    <form action="/settings" method="post">
+        <button name="restart" value="1">restart</button>This will restart the device
+    </form>
+    <br>
+    <br>
+    <br>
+    <br>
+    <label>Update Firmware</label>
+    <form action="/firmware" method="get">
+        <button name="Update" value="1">Update</button>
+    </form>
+  </div>
+  <div id="heap"></div>
+  <div id="analog"></div>
+  <div id="digital"></div>
+</body>
+</html>
