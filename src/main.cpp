@@ -153,6 +153,7 @@ int rValue = 0;
 int gValue = 255;
 int bValue = 0;
 
+
 // To turn LED fading on (=true) or off (=false)
 boolean wordFading = true;
 boolean minuteFading = true;
@@ -1004,39 +1005,56 @@ void handleWifimode(){
         }
     }
 
+void handleTest() {
+
+}
+
 void handleRoot() {
-const char html1[] =R"(
-              <html>
+
+  const char html_a[] =R"(<html>
               <head>
                  <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
                  <title>Wordclock</title>
-                 <script type='text/javascript' src='graphs.js'></script>
                  <script type='text/javascript'>
+                 function handleBri(){
+                   var req = new XMLHttpRequest();
+                   req.open('POST', '/brightness', true);
+                   req.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+                   req.send(('bri=' + bri.value));
+                   eventLocked = true;
+                   req.onreadystatechange = function() {
+                   if(req.readyState == 4) {
+                   eventLocked = false;
+                  location.href = '/';
+                   }
+                   }
+                 }
                  </script>
               </head>
               <body id='index' style='margin:0; padding:0;' onload='onBodyLoad()'>
-
-            )";
-char html2[] ="<div id='heap' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(%02d, %02d, %02d);'>";
-
-const char html3[] =R"(
-
+              <div id='heap' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
               <header>Wordclock</header><br><br>
               <form action='/ledcolor' method='get'>
-                <label>Set Color</label><br>
-                <input type='text' name='hex'>
-                <input type='submit' value='set'><br><br>
-              </form>
+                <label>Set Color</label><br>)";
 
-              <form action='/brightness' method='post' oninput='x.value=parseInt(bri.value)'>
+  char html_b[] = "<input type='text' STYLE='background-color: rgb(%02d, %02d, %02d);' name='hex'>";
+  char buff_b[200];
+  snprintf (buff_b, 200, html_b, rValue, gValue, bValue);
+
+  const char html_c[] =R"(<input type='submit' value='set'><br><br>
+              </form>
+              <form action='javascript:handleBri()' oninput='x.value=parseInt(bri.value)'>
                 <label>Brightness</label><br>
-                0
-                <input type='range' id='bri' name='bri' value='50'>
-                100
+                0)";
+
+  char html_d[] = "<input type='range' id='bri' name='bri' value=%02d>";
+  char buff_d[200];
+  snprintf (buff_d, 200, html_d, LEDbrightness/2);
+
+  char html_e[] =R"(100
                 <input type='submit' value='set'><output name="x" for="bri"></output><br><br>
               </form>
             </div>
-
             <div id='controls' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
               <label>Set time</label>
               <form>
@@ -1048,26 +1066,27 @@ const char html3[] =R"(
             </div>
             <div id='analog'><label>Settings</label>
             <form action="/settings" method="get">
-                <button name="settings" value="1">Settings</button>This will restart the device
+                <button name="settings" value="1">Settings</button>
             </form></div>
             <div id='digital'></div>
           </body>
-          </html>
-              )";
-  //char html[] = "rgb(%02d, %02d, %02d)";
-  char buff[300];
-  debugMSG.println("sprintf");
-  snprintf (buff, 300, html2, rValue, gValue, bValue);
-  //server.send (200, "text/html", buff);
-  char indexhtml[2000];
-  debugMSG.println("strcat1");
-  strcat(indexhtml,html1);
-  debugMSG.println("strcat2");
-  strcat(indexhtml,buff);
-  debugMSG.println("strcat3");
-  strcat(indexhtml,html3);
-  debugMSG.println("ssend");
-  server.send (200, "text/html", indexhtml);
+          </html>)";
+          {
+          File f = SPIFFS.open("index.htm", "w+");
+            if(f){//verifies that file opened successfully
+              f.print(html_a); //write top
+              f.print(buff_b); //write variable line
+              f.print(html_c); //write mid
+              f.print(buff_d); //write variable line
+              f.print(html_e); //write bottom
+
+              f.close();
+              if(!handleFileRead("index.htm")) server.send(404, "text/plain", "PageNotFound");;
+            }
+            else {
+              server.send (200, "text/html", "Read Write Error");
+            }
+          }
 
 }
 void handleLedcolor(){
@@ -1082,6 +1101,13 @@ void handleLedcolor(){
   debugMSG.print("bValue = ");
   debugMSG.println(bValue);
   //if(!handleFileRead("/index.htm")) server.send(404, "text/plain", "PageNotFound");
+  handleRoot;
+}
+void handleBrightness () {
+  debugMSG.println("handleBrightness");
+  int briVal = server.arg("bri").toInt();
+  LEDbrightness = briVal * 2;
+  debugMSG.println(LEDbrightness);
   handleRoot;
 }
 void initServer(){
@@ -1141,9 +1167,7 @@ void initServer(){
   server.on("/ledcolor", HTTP_GET, [](){
     if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", "PageNotFound");
   });
-  server.on("/test", HTTP_GET, [](){
-    if(!handleFileRead("/test.htm")) server.send(404, "text/plain", "PageNotFound");
-  });
+  server.on("/test", HTTP_GET, handleTest);
   server.on("/mode", HTTP_GET, [](){
     if(!handleFileRead("/mode.htm")) server.send(404, "text/plain", "PageNotFound");
   });
@@ -1155,6 +1179,7 @@ void initServer(){
   });
   server.on("/settings", HTTP_POST, handleWifimode);
   server.on("/ledcolor", HTTP_POST, handleLedcolor);
+  server.on("/brightness", HTTP_POST, handleBrightness);
 
 
 }

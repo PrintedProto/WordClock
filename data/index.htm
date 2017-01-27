@@ -8,7 +8,21 @@
   <title>Wordclock</title>
   <script type="text/javascript" src="graphs.js"></script>
   <script type="text/javascript">
+  function handleBri(){
+    var req = new XMLHttpRequest();
+    req.open('POST', '/brightness', true);
+    req.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+    req.send(('bri=' + bri.value));
+    eventLocked = true;
+    req.onreadystatechange = function() {
+    if(req.readyState == 4) {
+    eventLocked = false;
+   location.href = '/';
+    }
+    }
+  }
 
+  //  document.getElementById("subEmail")
   </script>
 </head>
 <body id="index" style="margin:0; padding:0;" onload="onBodyLoad()">
@@ -19,8 +33,8 @@
       <input type="text" name="hex">
       <input type="submit" value="set"><br><br>
     </form>
-
-    <form action="/brightness" method="post" oninput="x.value=parseInt(bri.value)">
+    <form action='javascript:handleBri()' oninput='x.value=parseInt(bri.value)'>
+    <!--<form action="/brightness" method="post" oninput="x.value=parseInt(bri.value)"-->
       <label>Brightness</label><br>
       0
       <input type="range" id="bri" name="bri" value="50">

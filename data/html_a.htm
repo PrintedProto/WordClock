@@ -1,0 +1,25 @@
+<html>
+            <head>
+               <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+               <title>Wordclock</title>
+               <script type='text/javascript'>
+               function handleBri(){
+                 var req = new XMLHttpRequest();
+                 req.open('POST', '/brightness', true);
+                 req.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+                 req.send(('bri=' + bri.value));
+                 eventLocked = true;
+                 req.onreadystatechange = function() {
+                 if(req.readyState == 4) {
+                 eventLocked = false;
+                location.href = '/';
+                 }
+                 }
+               }
+               </script>
+            </head>
+            <body id='index' style='margin:0; padding:0;' onload='onBodyLoad()'>
+            <div id='heap' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
+            <header>Wordclock</header><br><br>
+            <form action='/ledcolor' method='get'>
+              <label>Set Color</label><br>
