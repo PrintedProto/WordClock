@@ -1016,59 +1016,58 @@ void handleRoot() {
                  <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
                  <title>Wordclock</title>
                  <script type='text/javascript'>
-                 function handleBri(){
-                   var req = new XMLHttpRequest();
-                   req.open('POST', '/brightness', true);
-                   req.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
-                   req.send(('bri=' + bri.value));
-                   eventLocked = true;
-                   req.onreadystatechange = function() {
-                   if(req.readyState == 4) {
-                   eventLocked = false;
-                  location.href = '/';
-                   }
-                   }
-                 }
                  </script>
               </head>
-              <body id='index' style='margin:0; padding:0;' onload='onBodyLoad()'>
+              <body id='index' style='margin:0; padding:0;' >
               <div id='heap' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
               <header>Wordclock</header><br><br>
               <form action='/ledcolor' method='get'>
                 <label>Set Color</label><br>)";
 
   char html_b[] = "<input type='text' STYLE='background-color: rgb(%02d, %02d, %02d);' name='hex'>";
-  char buff_b[200];
-  snprintf (buff_b, 200, html_b, rValue, gValue, bValue);
+  char buff_b[120];
+  snprintf (buff_b, 120, html_b, rValue, gValue, bValue);
 
   const char html_c[] =R"(<input type='submit' value='set'><br><br>
               </form>
-              <form action='javascript:handleBri()' oninput='x.value=parseInt(bri.value)'>
+              <iframe name="blank" style="display:none;"></iframe>
+              <form action='/brightness' method='POST' target="blank" oninput='x.value=parseInt(bri.value)'>
                 <label>Brightness</label><br>
-                0)";
-
-  char html_d[] = "<input type='range' id='bri' name='bri' value=%02d>";
-  char buff_d[200];
-  snprintf (buff_d, 200, html_d, LEDbrightness/2);
-
-  char html_e[] =R"(100
+                0
+                <input type='range' id='bri' name='bri' value=30>
+                100
                 <input type='submit' value='set'><output name="x" for="bri"></output><br><br>
               </form>
             </div>
             <div id='controls' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
-              <label>Set time</label>
-              <form>
-           First name:<br>
-           <input type='text' name='firstname'><br>
-           Last name:<br>
-           <input type='text' name='lastname'>
+              <label>Current time</label><br>)";
+
+  char html_d[] = "%02d : %02d : %02d";
+  char buff_d[30];
+  snprintf (buff_d, 30, html_d, hour, minute, second);
+
+  const char html_e[] =R"(<br><br><label>Set time</label>
+              <iframe name="blank" style="display:none;"></iframe>
+              <form action='/settime' method='POST' target="blank">
+           HH:<input type='text' name='hour' size='2'>  MM:<input type='text' name='min' size='2'>  SS:<input type='text' name='sec' size='2'> <input type='submit' value='set'>  <br><br>
           </form>
             </div>
-            <div id='analog'><label>Settings</label>
+            <div id='analog' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
+            <label>Settings</label>
             <form action="/settings" method="get">
                 <button name="settings" value="1">Settings</button>
             </form></div>
-            <div id='digital'></div>
+            <div id='digital' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);>
+              <iframe name="blank" style="display:none;"></iframe>
+              <br><br><label>Demo words</label>
+              <form action='/demowords' method='POST' target="blank">
+                <input type='submit' value='start'>  <br><br>
+              </form>
+              <br><br><label>Test pixels</label>
+              <form action='/testpixels' method='POST' target="blank">
+                <input type='submit' value='start'>  <br><br>
+              </form>
+            </div>
           </body>
           </html>)";
           {
@@ -1108,7 +1107,36 @@ void handleBrightness () {
   int briVal = server.arg("bri").toInt();
   LEDbrightness = briVal * 2;
   debugMSG.println(LEDbrightness);
+
+}
+void handleSettime () {
+  debugMSG.println("handleSettime");
+  hour = server.arg("hour").toInt();
+  minute = server.arg("min").toInt();
+  second = server.arg("sec").toInt();
+  debugMSG.print("Hour set to   = ");
+  debugMSG.println(hour);
+  debugMSG.print("Minute set to = ");
+  debugMSG.println(minute);
+  debugMSG.print("Second set to = ");
+  debugMSG.println(second);
   handleRoot;
+}
+void handleDemowords () {
+
+
+}
+void colorWipe(uint32_t c, uint8_t wait) {
+  for(uint16_t i=0; i<wordPixels.numPixels(); i++) {
+    wordPixels.setPixelColor(i, c);
+    wordPixels.show();
+    delay(wait);
+  }
+}
+void handleTestpixels () {
+  colorWipe(wordPixels.Color(255, 0, 0), 50); // Red
+  colorWipe(wordPixels.Color(0, 255, 0), 50); // Green
+  colorWipe(wordPixels.Color(0, 0, 255), 50); // Blue
 }
 void initServer(){
   //SERVER INIT
@@ -1180,8 +1208,9 @@ void initServer(){
   server.on("/settings", HTTP_POST, handleWifimode);
   server.on("/ledcolor", HTTP_POST, handleLedcolor);
   server.on("/brightness", HTTP_POST, handleBrightness);
-
-
+  server.on("/settime", HTTP_POST, handleSettime);
+  server.on("/demowords", HTTP_POST, handleDemowords);
+  server.on("/testpixels", HTTP_POST, handleTestpixels);
 }
 
 void checkConfigmode(){
@@ -1397,7 +1426,7 @@ void loop() {
   unsigned int lastsec = second;
 
   getTime();
-
+/*
   // To refresh the display once [ second == 0 && abs(second-lastsec)!=0 ] every five minutes [ minute % 5 == 0  ; note: 0 modulo 5 = 0 ]
   if (minute % 5 ==0 && second == 0 && abs(second-lastsec)!=0){
     displayWords();
@@ -1406,7 +1435,7 @@ void loop() {
   // To make use of the four minute LEDs
   if (second == 0 && abs(second-lastsec)!=0 && minute % 5 != 0){
     displayMinutes();
-  }
+  }*/
 /*
   if (digitalRead(IncBrightPin) == LOW){ //increase brightness
     if ((LEDbrightness+10) <= maxBrightness){
