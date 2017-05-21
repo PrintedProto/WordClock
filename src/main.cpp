@@ -23,6 +23,7 @@ https://github.com/esp8266/Arduino/tree/master/libraries
 // For DS3231 RTC
 #include <Wire.h>               //I2C library
 #include "RtcDS3231.h"    //RTC library
+#include <pgmspace.h>
 
 RtcDS3231<TwoWire> RTC(Wire); //SDA D2 SCL D1
 JsonStreamingParser parser;
@@ -684,12 +685,12 @@ void getTime(){
 void connTOwifi(){
   if (WiFi.SSID()) {
     WiFi.mode(WIFI_STA);
-    debugMSG.println("Using saved wifi credentials");
+    debugMSG.println(F("Using saved wifi credentials"));
     //trying to fix connection in progress hanging
     ETS_UART_INTR_DISABLE();
     wifi_station_disconnect();
     ETS_UART_INTR_ENABLE();
-    WiFi.hostname("WordClock");//32 chars max
+    WiFi.hostname(F("WordClock"));//32 chars max
     WiFi.begin();
     for (byte i = 0; i<5; i++){ //will try to connect 5 times in 10 seconds
       if(WiFi.waitForConnectResult() != WL_CONNECTED) {
@@ -934,9 +935,9 @@ void handleJSON(){
 
 void handleWifimode(){
 
-      debugMSG.println("handleWifimode");
+      debugMSG.println(F("handleWifimode"));
       switch(server.arg("Wifimode").toInt()){// do something here with value from server.arg(name) then convert string data to int by appending .toint
-          debugMSG.println("Server arg wifimode: ");
+          debugMSG.println(F("Server arg wifimode: "));
           debugMSG.println(server.arg("Wifimode").toInt());
           case 0: //ap mode selected
           {
@@ -945,12 +946,12 @@ void handleWifimode(){
                 f.print(0); //0 means ap mode is selected, default config
                 f.close();
                 //ESP.restart();
-                server.send(200, "text/plain", "restarting");
+                server.send(200, F("text/plain"), F("restarting"));
                 delay(5000);
                 ESP.reset();
               }
               else{
-                server.send(200, "text/plain", "mode change failed");
+                server.send(200, F("text/plain"), F("mode change failed"));
               }
             }
             break;
@@ -1010,7 +1011,7 @@ void handleTest() {
 }
 
 void handleRoot() {
-
+/*
   const char html_a[] =R"(<html>
               <head>
                  <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
@@ -1057,7 +1058,7 @@ void handleRoot() {
             <form action="/settings" method="get">
                 <button name="settings" value="1">Settings</button>
             </form></div>
-            <div id='digital' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);>
+            <div id='digital' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
               <iframe name="blank" style="display:none;"></iframe>
               <br><br><label>Demo words</label>
               <form action='/demowords' method='POST' target="blank">
@@ -1080,13 +1081,13 @@ void handleRoot() {
               f.print(html_e); //write bottom
 
               f.close();
-              if(!handleFileRead("index.htm")) server.send(404, "text/plain", "PageNotFound");;
+              if(!handleFileRead("index.htm")) server.send(404, "text/plain", F("PageNotFound"));;
             }
             else {
               server.send (200, "text/html", "Read Write Error");
             }
-          }
-
+          }*/
+if(!handleFileRead("/index.htm")) server.send(404, "text/plain", F("PageNotFound"));
 }
 void handleLedcolor(){
   debugMSG.println("handleLedcolor");
@@ -1179,31 +1180,32 @@ void initServer(){
   });
   server.on("/sendJSON", handleJSON);
   server.on("/upload", HTTP_GET, []() {
-    const char* UploadHTML = R"(<html><body><form method='POST' action='' enctype='multipart/form-data'>
-                  Upload a file<br>
-                  <input type='file' name='upload'>
-                  <input type='submit' value="upload">
-               </form>
-         </body></html>)";
+    //const __FlashStringHelper* UploadHTML = F("test");
+    const __FlashStringHelper* UploadHTML = F("<html><body><form method='POST' action='' enctype='multipart/form-data'>\
+                  Upload a file<br>\
+                  <input type='file' name='upload'>\
+                  <input type='submit' value='upload'>\
+               </form>\
+         </body></html>");
          server.send(200, "text/html", UploadHTML);
     //server.sendHeader("Connection", "close");
     //server.sendHeader("Access-Control-Allow-Origin", "*");
     //server.send(200, "text/html", serverIndex);
   });
-  server.on("/upload", HTTP_POST, [](){ server.send(200, "text/plain", "uploading"); }, handleFileUpload);
+  server.on("/upload", HTTP_POST, [](){ server.send(200, "text/plain", F("uploading")); }, handleFileUpload);
   server.on("/", HTTP_GET, handleRoot);
   server.on("/ledcolor", HTTP_GET, [](){
-    if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", "PageNotFound");
+    if(!handleFileRead("/ledcolor.htm")) server.send(404, "text/plain", F("PageNotFound"));
   });
   server.on("/test", HTTP_GET, handleTest);
   server.on("/mode", HTTP_GET, [](){
-    if(!handleFileRead("/mode.htm")) server.send(404, "text/plain", "PageNotFound");
+    if(!handleFileRead("/mode.htm")) server.send(404, "text/plain", F("PageNotFound"));
   });
   server.on("/message", HTTP_GET, [](){
-    if(!handleFileRead("/message.htm")) server.send(404, "text/plain", "PageNotFound");
+    if(!handleFileRead("/message.htm")) server.send(404, "text/plain", F("PageNotFound"));
   });
   server.on("/settings", HTTP_GET, [](){
-    if(!handleFileRead("/settings.htm")) server.send(404, "text/plain", "PageNotFound");
+    if(!handleFileRead("/settings.htm")) server.send(404, "text/plain", F("PageNotFound"));
   });
   server.on("/settings", HTTP_POST, handleWifimode);
   server.on("/ledcolor", HTTP_POST, handleLedcolor);
@@ -1404,11 +1406,11 @@ void setup() {
 
   // Initialize the LEDs
   wordPixels.setBrightness(LEDbrightness);
-  minutePixels.setBrightness(LEDbrightness);
+  //minutePixels.setBrightness(LEDbrightness);
   wordPixels.begin();
   wordPixels.show();
-  minutePixels.begin();
-  minutePixels.show();
+  //minutePixels.begin();
+  //minutePixels.show();
   getTime();
   displayWords();
   displayMinutes();

@@ -25,36 +25,49 @@
   //  document.getElementById("subEmail")
   </script>
 </head>
-<body id="index" style="margin:0; padding:0;" onload="onBodyLoad()">
-  <div id="heap" style="display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);">
+<body id='index' style='margin:0; padding:0;' >
+  <div id='heap' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
     <header>Wordclock</header><br><br>
-    <form action="/ledcolor" method="get">
-      <label>Set Color</label><br>
-      <input type="text" name="hex">
-      <input type="submit" value="set"><br><br>
-    </form>
-    <form action='javascript:handleBri()' oninput='x.value=parseInt(bri.value)'>
-    <!--<form action="/brightness" method="post" oninput="x.value=parseInt(bri.value)"-->
-      <label>Brightness</label><br>
-      0
-      <input type="range" id="bri" name="bri" value="50">
-      100
-      <br><br>
-      <input type="submit" value="set">
-    </form>
-  </div>
+      <form action='/ledcolor' method='get'>
+        <label>Set Color</label><br>
+        <input type='text' STYLE='background-color: rgb(%02d, %02d, %02d);' name='hex'>
+        <input type='submit' value='set'><br><br>
+      </form>
+      <iframe name="blank" style="display:none;"></iframe>
+      <form action='/brightness' method='POST' target="blank" oninput='x.value=parseInt(bri.value)'>
+        <label>Brightness</label><br>
+        0
+        <input type='range' id='bri' name='bri' value=30>
+        100
+        <input type='submit' value='set'><output name="x" for="bri"></output><br><br>
+      </form>
+    </div>
+<div id='controls' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
+<label>Current time</label><br>
 
-  <div id="controls" style="display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);">
-    <label>Set time</label>
-    <form>
- First name:<br>
- <input type="text" name="firstname"><br>
- Last name:<br>
- <input type="text" name="lastname">
+"%02d : %02d : %02d"
+
+<br><br><label>Set time</label>
+<iframe name="blank" style="display:none;"></iframe>
+<form action='/settime' method='POST' target="blank">
+HH:<input type='text' name='hour' size='2'>  MM:<input type='text' name='min' size='2'>  SS:<input type='text' name='sec' size='2'> <input type='submit' value='set'>  <br><br>
 </form>
-  </div>
-  <div id="heap"></div>
-  <div id="analog"></div>
-  <div id="digital"></div>
+</div>
+<div id='analog' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238);'>
+<label>Settings</label>
+<form action="/settings" method="get">
+  <button name="settings" value="1">Settings</button>
+</form></div>
+<div id='digital' style='display: block; border: 1px solid rgb(68, 68, 68); padding: 5px; margin: 5px; width: 362px; background-color: rgb(238, 238, 238)';>
+<iframe name="blank" style="display:none;"></iframe>
+<br><br><label>Demo words</label>
+<form action='/demowords' method='POST' target="blank">
+  <input type='submit' value='start'>  <br><br>
+</form>
+<br><br><label>Test pixels</label>
+<form action='/testpixels' method='POST' target="blank">
+  <input type='submit' value='start'>  <br><br>
+</form>
+</div>
 </body>
 </html>
