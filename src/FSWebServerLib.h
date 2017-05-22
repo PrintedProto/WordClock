@@ -12,7 +12,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <TimeLib.h>
-#include <NtpClientLib.h>
+//#include <NtpClientLib.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESP8266mDNS.h>

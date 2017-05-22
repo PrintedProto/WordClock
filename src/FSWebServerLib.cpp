@@ -1,6 +1,6 @@
-// 
-// 
-// 
+//
+//
+//
 
 
 #include "FSWebServerLib.h"
@@ -38,7 +38,7 @@ void AsyncFSWebServer::s_secondTick(void* arg) {
 }
 
 void AsyncFSWebServer::sendTimeData() {
-    String data = "{";
+    /*String data = "{";
     data += "\"time\":\"" + NTP.getTimeStr() + "\",";
     data += "\"date\":\"" + NTP.getDateStr() + "\",";
     data += "\"lastSync\":\"" + NTP.getTimeDateString(NTP.getLastNTPSync()) + "\",";
@@ -50,7 +50,7 @@ void AsyncFSWebServer::sendTimeData() {
     DEBUGLOG("%s\r\n", NTP.getTimeDateString().c_str());
     data = String();
     //DEBUGLOG(__PRETTY_FUNCTION__);
-    //DEBUGLOG("\r\n")
+    //DEBUGLOG("\r\n")*/
 }
 
 String formatBytes(size_t bytes) {
@@ -124,8 +124,8 @@ void AsyncFSWebServer::begin(FS* fs) {
     loadHTTPAuth();
     //WIFI INIT
     if (_config.updateNTPTimeEvery > 0) { // Enable NTP sync
-        NTP.begin(_config.ntpServerName, _config.timezone / 10, _config.daylight);
-        NTP.setInterval(15, _config.updateNTPTimeEvery * 60);
+        /*NTP.begin(_config.ntpServerName, _config.timezone / 10, _config.daylight);
+        NTP.setInterval(15, _config.updateNTPTimeEvery * 60);*/
     }
     // Register wifi Event to control connection LED
     onStationModeConnectedHandler = WiFi.onStationModeConnected([this](WiFiEventStationModeConnected data) {
@@ -704,11 +704,11 @@ void AsyncFSWebServer::send_information_values_html(AsyncWebServerRequest *reque
     values += "x_netmask|" + (String)WiFi.subnetMask()[0] + "." + (String)WiFi.subnetMask()[1] + "." + (String)WiFi.subnetMask()[2] + "." + (String)WiFi.subnetMask()[3] + "|div\n";
     values += "x_mac|" + getMacAddress() + "|div\n";
     values += "x_dns|" + (String)WiFi.dnsIP()[0] + "." + (String)WiFi.dnsIP()[1] + "." + (String)WiFi.dnsIP()[2] + "." + (String)WiFi.dnsIP()[3] + "|div\n";
-    values += "x_ntp_sync|" + NTP.getTimeDateString(NTP.getLastNTPSync()) + "|div\n";
+    /*values += "x_ntp_sync|" + NTP.getTimeDateString(NTP.getLastNTPSync()) + "|div\n";
     values += "x_ntp_time|" + NTP.getTimeStr() + "|div\n";
     values += "x_ntp_date|" + NTP.getDateStr() + "|div\n";
     values += "x_uptime|" + NTP.getUptimeString() + "|div\n";
-    values += "x_last_boot|" + NTP.getTimeDateString(NTP.getLastBootTime()) + "|div\n";
+    values += "x_last_boot|" + NTP.getTimeDateString(NTP.getLastBootTime()) + "|div\n";*/
 
     request->send(200, "text/plain", values);
     //delete &values;
@@ -882,17 +882,17 @@ void AsyncFSWebServer::send_NTP_configuration_html(AsyncWebServerRequest *reques
         for (uint8_t i = 0; i < request->args(); i++) {
             if (request->argName(i) == "ntpserver") {
                 _config.ntpServerName = urldecode(request->arg(i));
-                NTP.setNtpServerName(_config.ntpServerName);
+                /*NTP.setNtpServerName(_config.ntpServerName);*/
                 continue;
             }
             if (request->argName(i) == "update") {
                 _config.updateNTPTimeEvery = request->arg(i).toInt();
-                NTP.setInterval(_config.updateNTPTimeEvery * 60);
+                /*NTP.setInterval(_config.updateNTPTimeEvery * 60);*/
                 continue;
             }
             if (request->argName(i) == "tz") {
                 _config.timezone = request->arg(i).toInt();
-                NTP.setTimeZone(_config.timezone / 10);
+                /*NTP.setTimeZone(_config.timezone / 10);*/
                 continue;
             }
             if (request->argName(i) == "dst") {
@@ -902,11 +902,11 @@ void AsyncFSWebServer::send_NTP_configuration_html(AsyncWebServerRequest *reques
             }
         }
 
-        NTP.setDayLight(_config.daylight);
+        /*NTP.setDayLight(_config.daylight);*/
         save_config();
         //firstStart = true;
 
-        setTime(NTP.getTime()); //set time
+        /*setTime(NTP.getTime()); //set time*/
     }
     handleFileRead("/ntp.html", request);
     //server.send(200, "text/html", PAGE_NTPConfiguration);
