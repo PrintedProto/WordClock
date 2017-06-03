@@ -29,5 +29,5 @@ void loop() {
     /* add main program code here */
 
     // DO NOT REMOVE. Attend OTA update from Arduino IDE
-    ESPHTTPServer.handle();
+    //ESPHTTPServer.handle();
 }

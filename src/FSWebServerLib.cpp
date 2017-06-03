@@ -161,7 +161,7 @@ void AsyncFSWebServer::begin(FS* fs) {
 
     MDNS.begin(_config.deviceName.c_str()); // I've not got this to work. Need some investigation.
     MDNS.addService("http", "tcp", 80);
-    ConfigureOTA(_httpAuth.wwwPassword.c_str());
+    //ConfigureOTA(_httpAuth.wwwPassword.c_str());//printedproto
     //DEBUGLOG("END Setup\n");//printedproto
 }
 
@@ -444,7 +444,7 @@ void AsyncFSWebServer::configureWifi() {
     DEBUGLOG(__PRETTY_FUNCTION__);
     DEBUGLOG("\r\n");*///printedproto
 }
-
+/*
 void AsyncFSWebServer::ConfigureOTA(String password) {
     // Port defaults to 8266
      ArduinoOTA.setPort(8366); //printedproto
@@ -480,7 +480,7 @@ void AsyncFSWebServer::ConfigureOTA(String password) {
     DEBUGLOG("\r\nOTA Ready\r\n");
 #endif // RELEASE
     ArduinoOTA.begin();
-}
+}*/
 
 void AsyncFSWebServer::onWiFiConnected(WiFiEventStationModeConnected data) {
     if (CONNECTION_LED >= 0) {

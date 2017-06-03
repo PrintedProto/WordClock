@@ -98,7 +98,7 @@ protected:
     bool saveHTTPAuth();
     void configureWifiAP();
     void configureWifi();
-    void ConfigureOTA(String password);
+    //void ConfigureOTA(String password);
     void serverInit();
 
     void onWiFiConnected(WiFiEventStationModeConnected data);
