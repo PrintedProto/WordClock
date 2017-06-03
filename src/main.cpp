@@ -16,7 +16,9 @@ void setup() {
     // WiFi is started inside library
     SPIFFS.begin(); // Not really needed, checked inside library and started if needed
     ESPHTTPServer.begin(&SPIFFS);
+    httpUpdater.setup(&server, "/firmware", "WordClock-OTA", "OTAadmin");
     /* add setup code here */
+
 }
 
 void loop() {
