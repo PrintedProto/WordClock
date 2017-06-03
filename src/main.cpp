@@ -5,6 +5,7 @@
 //#include "NtpClientLib.h"
 #include "ESPAsyncTCP.h"
 #include "ESPAsyncWebServer.h"
+//#include "ESP8266HTTPUpdateServer.h"
 #include <ESP8266mDNS.h>
 #include <Ticker.h>
 #include <ArduinoOTA.h>
@@ -12,11 +13,14 @@
 #include "FSWebServerLib.h"
 #include <Hash.h>
 
+
+//ESP8266HTTPUpdateServer httpUpdater;
+
 void setup() {
     // WiFi is started inside library
     SPIFFS.begin(); // Not really needed, checked inside library and started if needed
     ESPHTTPServer.begin(&SPIFFS);
-    httpUpdater.setup(&server, "/firmware", "WordClock-OTA", "OTAadmin");
+    //httpUpdater.setup(&ESPHTTPServer, "/firmware", "WordClock-OTA", "OTAadmin");
     /* add setup code here */
 
 }
