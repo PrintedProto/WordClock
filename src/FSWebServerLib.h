@@ -12,7 +12,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <TimeLib.h>
-//#include <NtpClientLib.h>
+#include <NtpClientLib.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESP8266mDNS.h>
@@ -31,8 +31,8 @@
 #define DEBUGLOG(...)
 #endif
 
-#define CONNECTION_LED 2 // Connection LED pin (Built in). -1 to disable
-#define AP_ENABLE_BUTTON 4 // Button pin to enable AP during startup for configuration. -1 to disable
+#define CONNECTION_LED -1 // Connection LED pin (Built in). -1 to disable
+#define AP_ENABLE_BUTTON -1 // Button pin to enable AP during startup for configuration. -1 to disable
 
 
 #define CONFIG_FILE "/config.json"
