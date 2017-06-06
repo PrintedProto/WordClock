@@ -135,6 +135,7 @@ void AsyncFSWebServer::begin(FS* fs) {
         this->onWiFiDisconnected(data);
     });
     WiFi.hostname(_config.deviceName.c_str());
+    WiFi.mode(WIFI_AP_STA);
     configureWifi(); //printedproto
     /*
     if (AP_ENABLE_BUTTON >= 0) {
@@ -154,7 +155,7 @@ void AsyncFSWebServer::begin(FS* fs) {
     DEBUGLOG("Scketch size: %u\r\n", ESP.getSketchSize());
     DEBUGLOG("Free flash space: %u\r\n", ESP.getFreeSketchSpace());*/
 
-    _secondTk.attach(1.0f, &AsyncFSWebServer::s_secondTick, static_cast<void*>(this)); // Task to run periodic things every second
+    //_secondTk.attach(1.0f, &AsyncFSWebServer::s_secondTick, static_cast<void*>(this)); // Task to run periodic things every second
 
     AsyncWebServer::begin();
     serverInit(); // Configure and start Web server
@@ -242,7 +243,7 @@ void AsyncFSWebServer::defaultConfig() {
     _config.gateway = IPAddress(192, 168, 1, 1);
     _config.dns = IPAddress(192, 168, 1, 1);
     _config.ntpServerName = "pool.ntp.org";
-    _config.updateNTPTimeEvery = 15;
+    _config.updateNTPTimeEvery = 1440;
     _config.timezone = 10;
     _config.daylight = 1;
     _config.deviceName = "Wordclock";
@@ -320,7 +321,7 @@ bool AsyncFSWebServer::loadHTTPAuth() {
         //DEBUGLOG("Failed to open secret file\r\n");//printedproto
         _httpAuth.auth = false;
         _httpAuth.wwwUsername = "admin"; //printedproto
-        _httpAuth.wwwPassword = "adminpass"; //printedproto
+        _httpAuth.wwwPassword = "admin"; //printedproto
         configFile.close();
         return false;
     }
@@ -378,10 +379,10 @@ bool AsyncFSWebServer::loadHTTPAuth() {
 }
 
 
-
+/*
 void AsyncFSWebServer::handle() {
     ArduinoOTA.handle();
-}
+}*///printedproto
 
 void AsyncFSWebServer::configureWifiAP() {
     //DEBUGLOG(__PRETTY_FUNCTION__);//printedproto
@@ -402,7 +403,7 @@ void AsyncFSWebServer::configureWifiAP() {
 }
 
 void AsyncFSWebServer::configureWifi() {
-    WiFi.mode(WIFI_AP_STA);
+
     //currentWifiStatus = WIFI_STA_DISCONNECTED;
     //DEBUGLOG("Connecting to %s\r\n", _config.ssid.c_str());//printedproto
     WiFi.begin(_config.ssid.c_str(), _config.password.c_str());
@@ -699,7 +700,7 @@ void AsyncFSWebServer::send_connection_state_values_html(AsyncWebServerRequest *
     else if (WiFi.status() == 5) state = "CONNECTION LOST";
     else if (WiFi.status() == 6) state = "DISCONNECTED";
 
-    WiFi.scanNetworks(true);
+    //WiFi.scanNetworks(true);//printedproto moved to /scan
 
     String values = "";
     values += "connectionstate|" + state + "|div\n";
@@ -846,9 +847,10 @@ void AsyncFSWebServer::send_network_configuration_html(AsyncWebServerRequest *re
         save_config();
         //yield();
         delay(1000);
-        _fs->end();
-        ESP.restart();
-        //ConfigureWifi();
+        //_fs->end();//printedproto removed restarting after credential change
+        //ESP.restart();//printedproto removed restarting after credential change
+        WiFi.disconnect();
+        configureWifi();
         //AdminTimeOutCounter = 0;
     } else {
         //DEBUGLOG(request->url().c_str());//printedproto
@@ -1172,6 +1174,7 @@ void AsyncFSWebServer::serverInit() {
     });
     on("/scan", HTTP_GET, [](AsyncWebServerRequest *request) {
         String json = "[";
+        WiFi.scanNetworks(true);
         int n = WiFi.scanComplete();
         if (n == WIFI_SCAN_FAILED) {
             WiFi.scanNetworks(true);
@@ -1290,6 +1293,7 @@ void AsyncFSWebServer::serverInit() {
     });
 #endif // HIDE_SECRET
 
+#define HIDE_CONFIG
 #ifdef HIDE_CONFIG
     on(CONFIG_FILE, HTTP_GET, [this](AsyncWebServerRequest *request) {
         if (!this->checkAuth(request))

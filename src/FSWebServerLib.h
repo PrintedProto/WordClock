@@ -54,7 +54,7 @@ typedef struct {
 } strConfig;
 
 typedef struct {
-    String APssid = "ESP"; // ChipID is appended to this name
+    String APssid = "Wordclock"; // ChipID is appended to this name
     String APpassword = "12345678";
     bool APenable = false; // AP disabled by default
 } strApConfig;
