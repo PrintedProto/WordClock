@@ -129,6 +129,7 @@ protected:
     void send_update_firmware_values_html(AsyncWebServerRequest *request);
     void setUpdateMD5(AsyncWebServerRequest *request);
     void updateFirmware(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
+    void disConnect(AsyncWebServerRequest *request);
 
     static String urldecode(String input); // (based on https://code.google.com/p/avr-netino/)
     static unsigned char h2int(char c);

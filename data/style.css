@@ -25,6 +25,7 @@ hr {
     text-transform: uppercase;
     -webkit-transition: color 0.4s, background-color 0.4s, border 0.4s;
     transition: color 0.4s, background-color 0.4s, border 0.4s;
+    cursor: default;
 }
 
     .btn:hover, .btn:focus {
@@ -47,6 +48,7 @@ hr {
 
 .btn--m {
     font-size: 14px;
+    text-align: center;
 }
 
 .btn--l {
@@ -92,4 +94,10 @@ th {
     .btn--full {
         max-width: 16em !important;
     }
+}
+.statusbox {
+    cursor: default;
+}
+td.ntcfgleft{
+    width: 100px;
 }

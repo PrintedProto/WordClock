@@ -235,8 +235,8 @@ bool AsyncFSWebServer::load_config() {
 
 void AsyncFSWebServer::defaultConfig() {
     // DEFAULT CONFIG
-    _config.ssid = "YOUR_DEFAULT_WIFI_SSID";
-    _config.password = "YOUR_DEFAULT_WIFI_PASSWD";
+    _config.ssid = "default";
+    _config.password = "default";
     _config.dhcp = 1;
     _config.ip = IPAddress(192, 168, 1, 4);
     _config.netmask = IPAddress(255, 255, 255, 0);
@@ -403,7 +403,7 @@ void AsyncFSWebServer::configureWifiAP() {
 }
 
 void AsyncFSWebServer::configureWifi() {
-
+    //DBG_OUTPUT_PORT.printf("\nConnecting to %s\r,%s\r\n",_config.ssid.c_str(), _config.password.c_str());
     //currentWifiStatus = WIFI_STA_DISCONNECTED;
     //DEBUGLOG("Connecting to %s\r\n", _config.ssid.c_str());//printedproto
     WiFi.begin(_config.ssid.c_str(), _config.password.c_str());
@@ -700,7 +700,7 @@ void AsyncFSWebServer::send_connection_state_values_html(AsyncWebServerRequest *
     else if (WiFi.status() == 5) state = "CONNECTION LOST";
     else if (WiFi.status() == 6) state = "DISCONNECTED";
 
-    //WiFi.scanNetworks(true);//printedproto moved to /scan
+    WiFi.scanNetworks(true);//printedproto moved to /scan
 
     String values = "";
     values += "connectionstate|" + state + "|div\n";
@@ -843,7 +843,7 @@ void AsyncFSWebServer::send_network_configuration_html(AsyncWebServerRequest *re
             if (request->argName(i) == "dns_3") { if (checkRange(request->arg(i))) 	_config.dns[3] = request->arg(i).toInt(); continue; }
             if (request->argName(i) == "dhcp") { _config.dhcp = true; continue; }
         }
-        request->send_P(200, "text/html", Page_WaitAndReload);
+        //request->send_P(200, "text/html", Page_WaitAndReload);//printedproto removed page reload after save
         save_config();
         //yield();
         delay(1000);
@@ -952,7 +952,7 @@ void AsyncFSWebServer::send_wwwauth_configuration_values_html(AsyncWebServerRequ
     values += "wwwpass|" + (String)_httpAuth.wwwPassword + "|input\n";
 
     request->send(200, "text/plain", values);
-
+    values = "";
     //DEBUGLOG(__FUNCTION__);//printedproto
     //DEBUGLOG("\r\n");//printedproto
 }
@@ -1110,7 +1110,10 @@ void AsyncFSWebServer::updateFirmware(AsyncWebServerRequest *request, String fil
 
     //delay(2);
 }
-
+void AsyncFSWebServer::disConnect(AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "OK");
+    WiFi.disconnect();
+}
 void AsyncFSWebServer::serverInit() {
     //SERVER INIT
     //list directory
@@ -1152,7 +1155,8 @@ void AsyncFSWebServer::serverInit() {
             return request->requestAuthentication();
         this->send_network_configuration_values_html(request);
     });
-    on("/admin/connectionstate", [this](AsyncWebServerRequest *request) {
+    on("/admin/connstate", [this](AsyncWebServerRequest *request) {
+        DBG_OUTPUT_PORT.printf("connectionstate requested\n");
         if (!this->checkAuth(request))
             return request->requestAuthentication();
         this->send_connection_state_values_html(request);
@@ -1174,12 +1178,12 @@ void AsyncFSWebServer::serverInit() {
     });
     on("/scan", HTTP_GET, [](AsyncWebServerRequest *request) {
         String json = "[";
-        WiFi.scanNetworks(true);
+        //WiFi.scanNetworks(true);
         int n = WiFi.scanComplete();
         if (n == WIFI_SCAN_FAILED) {
             WiFi.scanNetworks(true);
         } else if (n) {
-            for (int i = 0; i < n; ++i) {
+            for (int i = 0; i < 4; ++i) {//printedproto limited ap displayed to 4
                 if (i) json += ",";
                 json += "{";
                 json += "\"rssi\":" + String(WiFi.RSSI(i));
@@ -1226,6 +1230,12 @@ void AsyncFSWebServer::serverInit() {
         if (!this->handleFileRead("/admin.html", request))
             request->send(404, "text/plain", "FileNotFound");
     });
+    on("/wifi/disconnect", [this](AsyncWebServerRequest *request) {
+        DBG_OUTPUT_PORT.printf("disconnect requested\n");
+        if (!this->checkAuth(request))
+            return request->requestAuthentication();
+        this->disConnect(request);
+    });
     on("/system.html", [this](AsyncWebServerRequest *request) {
         if (!this->checkAuth(request))
             return request->requestAuthentication();
@@ -1260,7 +1270,6 @@ void AsyncFSWebServer::serverInit() {
     }, [this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
         this->updateFirmware(request, filename, index, data, len, final);
     });
-
 
     //called when the url is not defined here
     //use it to load content from SPIFFS
