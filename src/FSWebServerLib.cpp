@@ -1156,7 +1156,7 @@ void AsyncFSWebServer::serverInit() {
         this->send_network_configuration_values_html(request);
     });
     on("/admin/connstate", [this](AsyncWebServerRequest *request) {
-        DBG_OUTPUT_PORT.printf("connectionstate requested\n");
+        //DBG_OUTPUT_PORT.printf("connectionstate requested\n");
         if (!this->checkAuth(request))
             return request->requestAuthentication();
         this->send_connection_state_values_html(request);
@@ -1214,7 +1214,7 @@ void AsyncFSWebServer::serverInit() {
         this->send_NTP_configuration_html(request);
     });
     on("/admin/restart", [this](AsyncWebServerRequest *request) {
-        DBG_OUTPUT_PORT.println(request->url());
+        //DBG_OUTPUT_PORT.println(request->url());
         if (!this->checkAuth(request))
             return request->requestAuthentication();
         this->restart_esp(request);
@@ -1231,7 +1231,7 @@ void AsyncFSWebServer::serverInit() {
             request->send(404, "text/plain", "FileNotFound");
     });
     on("/wifi/disconnect", [this](AsyncWebServerRequest *request) {
-        DBG_OUTPUT_PORT.printf("disconnect requested\n");
+        //DBG_OUTPUT_PORT.printf("disconnect requested\n");
         if (!this->checkAuth(request))
             return request->requestAuthentication();
         this->disConnect(request);
