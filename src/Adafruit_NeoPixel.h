@@ -146,7 +146,7 @@ class Adafruit_NeoPixel {
   uint32_t
     getPixelColor(uint16_t n) const;
   inline bool
-    canShow(void) { return (micros() - endTime) >= 50L; }
+    canShow(void) { return (micros() - endTime) >= 300L; }
 
  private:
 
@@ -175,7 +175,6 @@ class Adafruit_NeoPixel {
   uint8_t
     pinMask;       // Output PORT bitmask
 #endif
-
 };
 
 #endif // ADAFRUIT_NEOPIXEL_H

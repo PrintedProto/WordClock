@@ -7,15 +7,15 @@
 // Remarks:
 // - when using long LED strings the voltage can drop significantly till the end of the string! Resulting in a different color!
 
-unsigned int  hour=00, minute=4, second=00;
+#include "german.h"
+
+byte  hour=00, minute=4, second=00;
 
 // Neopixel
-#include <Adafruit_NeoPixel.h>
-#define wordPIN 3
-#define wordLEDS 121
-//#define minutePIN 2
-//#define minuteLEDS 4
-Adafruit_NeoPixel wordPixels = Adafruit_NeoPixel(wordLEDS, wordPIN, NEO_GRB + NEO_KHZ800);
+
+German::German(byte wordPIN) : Adafruit_NeoMatrix(11, 11, wordPIN, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ZIGZAG, NEO_GRB + NEO_KHZ800){}
+//Adafruit_NeoMatrix wordPixels = Adafruit_NeoMatrix(11, 11, wordPIN, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ZIGZAG, NEO_GRB + NEO_KHZ800);
+//}
 //Adafruit_NeoPixel minutePixels = Adafruit_NeoPixel(minuteLEDS, minutePIN, NEO_GRB + NEO_KHZ800);
 //int colourChangePin = 6;
 //int colourChange = 0;
@@ -32,29 +32,29 @@ Adafruit_NeoPixel wordPixels = Adafruit_NeoPixel(wordLEDS, wordPIN, NEO_GRB + NE
 // 8 ┌--> N H E Z --> T H C A                 --┘ 15   ACHT HZEHN
 // 7 └--  R H U  <-- S H C E S                <--   0   SECHS UHR
 
-const int wordPositions[][8] = {{5 , 1, 2, 4, 5, 6, 0 , 0 }, // 5 LEDs total, Position 0,1,2,3,4 in the string   => 0: ES IST
+const byte wordPositions[][8] = {{5 , 1, 2, 4, 5, 6, 0 , 0 }, // 5 LEDs total, Position 0,1,2,3,4 in the string   => 0: ES IST
                                 {4 , 8, 9, 10, 11, 0 , 0 , 0 }, // 4 LEDs total, Position 5,6,7,8 in the string     => 1: MFÜNF
-                                {4 , 12, 13, 14, 15, 0 , 0 , 0 }, //                                                  => 2: MZEHN
-                                {7 , 16, 17, 18, 19, 20, 21, 22}, //                                                  => 3: ZWANZIG
+                                {4 , 22, 21, 20, 19, 0 , 0 , 0 }, //                                                  => 2: MZEHN
+                                {7 , 18, 17, 16, 15, 14, 13, 12}, //                                                  => 3: ZWANZIG
                                 {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 }, // Not used in west german                          => 4: DREI
-                                {7 , 62, 63, 64, 65, 66, 67, 68}, //                                                  => 5: VIERTEL
-                                {4 , 55, 56, 57, 58, 0 , 0 , 0 }, //                                                  => 6: NACH
-                                {3 , 59, 60, 61, 0 , 0 , 0 , 0 }, //                                                  => 7: VOR
-                                {4 , 51, 52, 53, 54, 0 , 0 , 0 }, //                                                  => 8: HALB
-                                {5 , 46, 47, 48, 49, 50, 0 , 0 }, //                                                  => 9: ZWÖLF
-                                {4 , 35, 36, 37, 38, 0 , 0 , 0 }, //                                                  => 10: ZWEI
-                                {3 , 37, 38, 39, 0 , 0 , 0 , 0 }, //                                                  => 11: EIN
-                                {4 , 37, 38, 39, 40, 0 , 0 , 0 }, //                                                  => 12: EINS
-                                {6 , 40, 41, 42, 43, 44, 45, 0 }, //                                                  => 13: SIEBEN
-                                {4 , 31, 32, 33, 34, 0 , 0 , 0 }, //                                                  => 14: HDREI
-                                {4 , 27, 28, 29, 30, 0 , 0 , 0 }, //                                                  => 15: HFÜNF
-                                {3 , 16, 17, 18, 0 , 0 , 0 , 0 }, //                                                  => 16: ELF
-                                {4 , 19, 20, 21, 22, 0 , 0 , 0 }, //                                                  => 17: NEUN
-                                {4 , 23, 24, 25, 26, 0 , 0 , 0 }, //                                                  => 18: HVIER
-                                {4 , 12, 13, 14, 15, 0 , 0 , 0 }, //                                                  => 19: ACHT
-                                {4 , 8 , 9 , 10, 11, 0 , 0 , 0 }, //                                                  => 20: HZEHN
-                                {5 , 0 , 1 , 2 , 3 , 4 , 0 , 0 }, //                                                  => 21: SECHS
-                                {3 , 5 , 6 , 7 , 0 , 0 , 0 , 0 } //                                                   => 22: UHR
+                                {7 , 27, 28, 29, 30, 31, 32, 33}, //                                                  => 5: VIERTEL
+                                {4 , 42, 41, 40, 39, 0 , 0 , 0 }, //                                                  => 6: NACH
+                                {3 , 38, 37, 36, 0 , 0 , 0 , 0 }, //                                                  => 7: VOR
+                                {4 , 45, 46, 47, 48, 0 , 0 , 0 }, //                                                  => 8: HALB
+                                {5 , 50, 51, 52, 53, 54, 0 , 0 }, //                                                  => 9: ZWÖLF
+                                {4 , 66, 65, 64, 63, 0 , 0 , 0 }, //                                                  => 10: ZWEI
+                                {3 , 64, 63, 62, 0 , 0 , 0 , 0 }, //                                                  => 11: EIN
+                                {4 , 64, 63, 62, 61, 0 , 0 , 0 }, //                                                  => 12: EINS
+                                {6 , 61, 60, 59, 58, 57, 56, 0 }, //                                                  => 13: SIEBEN
+                                {4 , 68, 69, 70, 71, 0 , 0 , 0 }, //                                                  => 14: HDREI
+                                {4 , 74, 75, 76, 77, 0 , 0 , 0 }, //                                                  => 15: HFÜNF
+                                {3 , 88, 87, 86, 0 , 0 , 0 , 0 }, //                                                  => 16: ELF
+                                {4 , 85, 84, 83, 82, 0 , 0 , 0 }, //                                                  => 17: NEUN
+                                {4 , 81, 80, 79, 78, 0 , 0 , 0 }, //                                                  => 18: HVIER
+                                {4 , 90, 91, 92, 93, 0 , 0 , 0 }, //                                                  => 19: ACHT
+                                {4 , 94 , 95 , 96, 97, 0 , 0 , 0 }, //                                                  => 20: HZEHN
+                                {5 , 109, 108, 107, 106, 105, 0 , 0 }, //                                                  => 21: SECHS
+                                {3 , 102, 101, 100, 0 , 0 , 0 , 0 } //                                                   => 22: UHR
 };
 
 // MZWEI  <-- MEINS
@@ -63,14 +63,14 @@ const int wordPositions[][8] = {{5 , 1, 2, 4, 5, 6, 0 , 0 }, // 5 LEDs total, Po
 //   v          |
 // MDREI      MVIER <-- 0
 
-const int minutePositions[][5] = {{1 , 1 , 0 , 0 , 0},                                                            //  => MEINS
-                                  {2 , 1 , 2 , 0 , 0},                                                            //  => MEINS, MZWEI
-                                  {3 , 1 , 2 , 3 , 0},                                                            //  => MEINS, MZWEI, MDREI
-                                  {4 , 0 , 1 , 2 , 3}                                                             //  => MEINS, MZWEI, MDREI
+const byte minutePositions[][5] = {{1 , 111 , 0 , 0 , 0},                                                            //  => MEINS
+                                  {2 , 111 , 112 , 0 , 0},                                                            //  => MEINS, MZWEI
+                                  {3 , 111 , 112 , 113 , 0},                                                            //  => MEINS, MZWEI, MDREI
+                                  {4 , 111 , 112 , 113 , 114}                                                             //  => MEINS, MZWEI, MDREI
 };
 
 
-const int colours[][3] = {{255, 255, 255},                                                                        // WHITE
+const byte colours[][3] = {{255, 255, 255},                                                                        // WHITE
                           {255, 0  ,   0},                                                                        // RED
                           {0  , 255,   0},                                                                        // GREEN
                           {0  , 0  , 255},                                                                        // BLUE
@@ -84,20 +84,20 @@ const int colours[][3] = {{255, 255, 255},                                      
 const char* colourName[9] = {"WHITE","RED","GREEN","BLUE","ORANGE","YELLOW","CYAN","PURPLE","PINK"};
 
 // To adjust the brightness
-int LEDbrightness = 50;                                  // base LED brightness, value between 1 - 255 (with 255 being the brightest)
-int maxBrightness = 150;                                // limit the maximum brightness to lower stress on the LEDs
-int IncBrightPin=7;
-int RedBrightPin=9;
+byte LEDbrightness = 50;                                  // base LED brightness, value between 1 - 255 (with 255 being the brightest)
+byte maxBrightness = 150;                                // limit the maximum brightness to lower stress on the LEDs
+//int IncBrightPin=7;
+//int RedBrightPin=9;
 // Value of each colour, starting with White
-int rValue = 255;
-int gValue = 255;
-int bValue = 255;
+byte rValue = 255;
+byte gValue = 255;
+byte bValue = 255;
 
 // To turn LED fading on (=true) or off (=false)
 boolean wordFading = true;
 boolean minuteFading = true;
-int fadingDelay = 20;
-int fadingStep = 1;
+byte fadingDelay = 20;
+byte fadingStep = 1;
 
 
 // For DS3231 RTC
@@ -109,21 +109,17 @@ int fadingStep = 1;
 RTC_DS3231 RTC;
 #endif //ENABLE_RTC
 
-void ledsOff() {
+void German::ledsOff() {
   if ( wordFading == true && minuteFading == true){
 //    int step = LEDbrightness / 20;                // fade out in 20 steps, 100 ms apart
 //    for ( int i = LEDbrightness ; i > 0 ; i-=step ) {
     for ( int i = LEDbrightness ; i > 0 ; i-=fadingStep ) {
       for ( int j = 0 ; j < wordLEDS ; j++ ){                 // we fade every LED ...
-        if ( wordPixels.getPixelColor(j) != 0){               // that is not off
-          wordPixels.setPixelColor(j,i*rValue/255,i*gValue/255,i*bValue/255);
+        if ( getPixelColor(j) != 0){               // that is not off
+          setPixelColor(j,i*rValue/255,i*gValue/255,i*bValue/255);
         }
       }
-      for ( int j = 0 ; j < minuteLEDS ; j++ ){
-        minutePixels.setPixelColor(j,i*rValue/255,i*gValue/255,i*bValue/255);   // here we know that each LED is ON
-      }
-      wordPixels.show();
-      minutePixels.show();
+      show();
       delay(fadingDelay);
     }
   }
@@ -133,11 +129,13 @@ void ledsOff() {
 //    for ( int i = LEDbrightness ; i > 0 ; i-=step ) {
     for ( int i = LEDbrightness ; i > 0 ; i-=fadingStep ) {
       for ( int j = 0 ; j < wordLEDS ; j++ ){                 // we fade every LED ...
-        if ( wordPixels.getPixelColor(j) != 0){               // that is not off
-          wordPixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+        if ( getPixelColor(j) != 0){ // that is not off
+            if(j < 111){    //excludes minute pixels
+              setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+          }
         }
       }
-      wordPixels.show();
+      show();
       delay(fadingDelay);
     }
   }
@@ -146,86 +144,82 @@ void ledsOff() {
 //    int step = LEDbrightness / 20;                // fade out in 20 steps, 100 ms apart
 //    for ( int i = LEDbrightness ; i > 0 ; i-=step ) {
     for ( int i = LEDbrightness ; i > 0 ; i-=fadingStep ) {
-      for ( int j = 0 ; j < minuteLEDS ; j++ ){
-        minutePixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);   // here we know that each LED is ON
+      for ( int j = 111 ; j < wordLEDS ; j++ ){ //minute leds start at 111
+        setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);   // here we know that each LED is ON
       }
-      minutePixels.show();
+      show();
       delay(fadingDelay);
     }
   }
 
   // make sure that they are really off and in case both wordFading and minuteFading is false
   for ( int j = 0 ; j < wordLEDS ; j++ ){
-    wordPixels.setPixelColor(j,0,0,0);
+    setPixelColor(j,0,0,0);
   }
-  for ( int j = 0 ; j < minuteLEDS ; j++ ){
-    minutePixels.setPixelColor(j,0,0,0);
-  }
-  wordPixels.show();
-  minutePixels.show();
+  show();
 }
 
-void minutesOff() {
+void German::minutesOff() {
   if ( minuteFading == true){
 //    int step = LEDbrightness / 20;                // fade out in 20 steps, 100 ms apart
 //    for ( int i = LEDbrightness ; i > 0 ; i-=step ) {
     for ( int i = LEDbrightness ; i > 0 ; i-=fadingStep ) {
-      for ( int j = 0 ; j < minuteLEDS ; j++ ){                 // we fade every LED ...
-        if ( minutePixels.getPixelColor(j) != 0){               // that is not off
-          minutePixels.setPixelColor(j,i*rValue/255,i*gValue/255,i*bValue/255);
+      for ( int j = 111 ; j < wordLEDS ; j++ ){                 // we fade every LED ...
+        if ( getPixelColor(j) != 0){               // that is not off
+          setPixelColor(j,i*rValue/255,i*gValue/255,i*bValue/255);
         }
       }
-      minutePixels.show();
+      show();
       delay(fadingDelay);
     }
   }
 
   // make sure that they are really off and in case minuteFading is false
-  for ( int j = 0 ; j < minuteLEDS ; j++ ){
-    minutePixels.setPixelColor(j,0,0,0);
+  for ( int j = 111 ; j < 115 ; j++ ){ //minute leds start at 111
+    setPixelColor(j,0,0,0);
   }
-  minutePixels.show();
+  show();
 }
 
-void writeWords(int Words[]) {
+void German::writeWords(int Words[]) {
 if ( wordFading == true) {
     for ( int i = 0 ; i <= LEDbrightness ; i+=fadingStep ){
       for ( int k = 1 ; k < Words[0]+1 ; k++ ) {
         for ( int j=1 ; j < wordPositions[Words[k]][0]+1 ; j++ ){
-          wordPixels.setPixelColor(wordPositions[Words[k]][j],i*rValue/255,i*gValue/255,i*bValue/255);
+          setPixelColor(wordPositions[Words[k]][j],i*rValue/255,i*gValue/255,i*bValue/255);
         }
       }
-      wordPixels.show();
+      show();
       delay(fadingDelay);
     }
   } else {
     for ( int k = 1 ; k < Words[0]+1 ; k++ ) {
       for ( int j=1 ; j < wordPositions[Words[k]][0]+1 ; j++ ){
-        wordPixels.setPixelColor(wordPositions[Words[k]][j],LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+        setPixelColor(wordPositions[Words[k]][j],LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
       }
     }
-    wordPixels.show();
+    show();
   }
 }
 
-void writeMinutes(int Minute){
+void German::writeMinutes(int Minute){
   if ( minuteFading == true ) {
     for ( int i = 0 ; i <= LEDbrightness ; i+=fadingStep ){
       for ( int j=1 ; j < minutePositions[Minute][0]+1 ; j++ ){
-        minutePixels.setPixelColor(minutePositions[Minute][j],i*rValue/255,i*gValue/255,i*bValue/255);
+        setPixelColor(minutePositions[Minute][j],i*rValue/255,i*gValue/255,i*bValue/255);
       }
-      minutePixels.show();
+      show();
       delay(fadingDelay);
     }
   } else {
     for ( int j=1 ; j < minutePositions[Minute][0]+1 ; j++ ){
-      minutePixels.setPixelColor(minutePositions[Minute][j],LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
+      setPixelColor(minutePositions[Minute][j],LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
     }
-    minutePixels.show();
+    show();
   }
 }
 
-void displayWords(){
+void German::displayWords(){
   // start by clearing the display to a known state
   ledsOff();
   int Words[6] = {1, 0, 0, 0, 0, 0};
@@ -578,7 +572,7 @@ void displayWords(){
    writeWords(Words);
 }
 
-void displayMinutes(){
+void German::displayMinutes(){
    minutesOff();
    // In order to make use of the four minute LEDs
    if (minute % 5 == 1) {
@@ -599,7 +593,7 @@ void displayMinutes(){
   }
 }
 
-void getTime(){
+void German::getTime(){
   /*DateTime now = RTC.now();*/
 
   //hour = now.hour();
@@ -608,7 +602,7 @@ void getTime(){
   hour = 5;
   minute = 2;
   second = 2;
-
+/*
   if (daylightSaving()){
    hour += 1;
   }
@@ -618,31 +612,31 @@ void getTime(){
 
   if (hour > 12){
    hour -= 12;
-  }
+ }*/
 }
 
-void setup()
+void German::Word_Init()
 {
   // initialise the hardware
   // initialize the appropriate pins as outputs:
 
   // NOTE acc. to arduino.cc: If the pin isn't connected to anything, digitalRead() can return either HIGH or LOW (and this can change randomly).
   // This is also prevented by using the internal pullup!
-  pinMode(IncBrightPin, INPUT_PULLUP);
-  pinMode(RedBrightPin, INPUT_PULLUP);
-  pinMode(colourChangePin, INPUT_PULLUP);
-  pinMode(colourCyclePin, INPUT_PULLUP);
+  //pinMode(IncBrightPin, INPUT_PULLUP);
+  //pinMode(RedBrightPin, INPUT_PULLUP);
+  //pinMode(colourChangePin, INPUT_PULLUP);
+  //pinMode(colourCyclePin, INPUT_PULLUP);
 
   // Initialize the LEDs
-  wordPixels.setBrightness(LEDbrightness);
-  minutePixels.setBrightness(LEDbrightness);
-  wordPixels.begin();
-  wordPixels.show();
-  minutePixels.begin();
-  minutePixels.show();
+  setBrightness(LEDbrightness);
+  //minutePixels.setBrightness(LEDbrightness);
+  begin();
+  show();
+  //minutePixels.begin();
+  //minutePixels.show();
 
-  Serial.begin(9600);
-  Serial.println(F("Starting clock"));
+  //Serial.begin(9600);
+  //Serial.println(F("Starting clock"));
 
 /*
   // For RTC
@@ -680,7 +674,7 @@ void setup()
   displayWords();
   displayMinutes();
 }
-
+/*
 void loop(void)
 {
   unsigned int lastsec = second;
@@ -724,13 +718,7 @@ void loop(void)
         wordPixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
       }
     }
-    for ( int j = 0 ; j < minuteLEDS ; j++ ){
-      if ( minutePixels.getPixelColor(j) != 0){
-        minutePixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
-      }
-    }
     wordPixels.show();
-    minutePixels.show();
     delay(500);
   }
 
@@ -799,4 +787,4 @@ void loop(void)
     Serial.print(F("Cycling colour, not yet implemented"));
     delay(500);
   }
-}
+}*/

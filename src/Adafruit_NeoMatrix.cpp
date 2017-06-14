@@ -29,9 +29,10 @@
   <http://www.gnu.org/licenses/>.
   -------------------------------------------------------------------------*/
 
-#include <Adafruit_NeoPixel.h>
-#include <Adafruit_NeoMatrix.h>
+#include "Adafruit_NeoPixel.h"
+#include "Adafruit_NeoMatrix.h"
 #include "gamma.h"
+
 #ifdef __AVR__
  #include <avr/pgmspace.h>
 #elif defined(ESP8266)
