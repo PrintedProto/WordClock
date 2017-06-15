@@ -9,7 +9,8 @@
 
 #include "german.h"
 
-byte  hour=00, minute=4, second=00;
+//German word(3);
+
 
 // Neopixel
 

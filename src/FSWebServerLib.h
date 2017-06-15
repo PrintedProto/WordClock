@@ -15,11 +15,11 @@
 #include "NtpClientLib.h"
 #include "ESPAsyncTCP.h"
 #include "ESPAsyncWebServer.h"
-#include <ESP8266mDNS.h>
-#include <FS.h>
-#include <Ticker.h>
-#include <ArduinoOTA.h>
-#include <ArduinoJson.h>
+#include "ESP8266mDNS.h"
+#include "FS.h"
+#include "Ticker.h"
+#include "ArduinoOTA.h"
+#include "ArduinoJson.h"
 
 #define RELEASE  // Comment to enable debug output
 
@@ -64,6 +64,12 @@ typedef struct {
     String wwwUsername;
     String wwwPassword;
 } strHTTPAuth;
+
+typedef struct {
+    bool auth;
+    String wwwUsername;
+    String wwwPassword;
+} jsonTime;
 
 class AsyncFSWebServer : public AsyncWebServer {
 public:

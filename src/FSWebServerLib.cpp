@@ -89,6 +89,7 @@ void AsyncFSWebServer::begin(FS* fs) {
     if (CONNECTION_LED >= 0) {
         pinMode(CONNECTION_LED, OUTPUT); // CONNECTION_LED pin defined as output
     }
+    /*
     if (AP_ENABLE_BUTTON >= 0) {
         pinMode(AP_ENABLE_BUTTON, INPUT_PULLUP); // If this pin is HIGH during startup ESP will run in AP_ONLY mode. Backdoor to change WiFi settings when configured WiFi is not available.
     }
@@ -97,7 +98,7 @@ void AsyncFSWebServer::begin(FS* fs) {
     if (AP_ENABLE_BUTTON >= 0) {
         _apConfig.APenable = !digitalRead(AP_ENABLE_BUTTON); // Read AP button. If button is pressed activate AP
         //DEBUGLOG("AP Enable = %d\n", _apConfig.APenable);//printedproto
-    }
+    }*/
 
     if (CONNECTION_LED >= 0) {
         digitalWrite(CONNECTION_LED, HIGH); // Turn LED off
@@ -155,7 +156,7 @@ void AsyncFSWebServer::begin(FS* fs) {
     DEBUGLOG("Scketch size: %u\r\n", ESP.getSketchSize());
     DEBUGLOG("Free flash space: %u\r\n", ESP.getFreeSketchSpace());*/
 
-    //_secondTk.attach(1.0f, &AsyncFSWebServer::s_secondTick, static_cast<void*>(this)); // Task to run periodic things every second
+    _secondTk.attach(20.0f, &AsyncFSWebServer::s_secondTick, static_cast<void*>(this)); // Task to run periodic things every second
 
     AsyncWebServer::begin();
     serverInit(); // Configure and start Web server
