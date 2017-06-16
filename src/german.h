@@ -16,11 +16,11 @@ public:
 	void minutesOff();
 	void writeWords(int Words[]);
 	void writeMinutes(int Minute);
-	void displayWords();
-	void displayMinutes();
-	void getTime();
+	void displayWords(int minute, int hour);
+	void displayMinutes(int minute);
+	//void getTime();
 	void Word_Init();
-	byte  hour, minute, second;
+	//byte hour, minute, second;
 	byte LEDbrightness, maxBrightness, rValue, gValue, bValue, fadingDelay, fadingStep;
 	boolean wordFading, minuteFading;
 

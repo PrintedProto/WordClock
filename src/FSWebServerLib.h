@@ -12,7 +12,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include "TimeLib.h"
-#include "NtpClientLib.h"
+//#include "NtpClientLib.h"
 #include "ESPAsyncTCP.h"
 #include "ESPAsyncWebServer.h"
 #include "ESP8266mDNS.h"
@@ -20,6 +20,8 @@
 #include "Ticker.h"
 #include "ArduinoOTA.h"
 #include "ArduinoJson.h"
+#include "german.h"
+#include "RtcDS3231.h"
 
 #define RELEASE  // Comment to enable debug output
 
@@ -65,17 +67,14 @@ typedef struct {
     String wwwPassword;
 } strHTTPAuth;
 
-typedef struct {
-    bool auth;
-    String wwwUsername;
-    String wwwPassword;
-} jsonTime;
 
 class AsyncFSWebServer : public AsyncWebServer {
 public:
     AsyncFSWebServer(uint16_t port);
     void begin(FS* fs);
     void handle();
+    void getTime();
+    RtcDateTime _curTime; //RtcDateTime(year, month, dayOfMonth, hour, minute, second);
 
 
 protected:
@@ -96,7 +95,7 @@ protected:
 
     AsyncEventSource _evs = AsyncEventSource("/events");
 
-    void sendTimeData();
+    //void sendTimeData();
     bool load_config();
     void defaultConfig();
     bool save_config();

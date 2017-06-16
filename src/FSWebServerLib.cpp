@@ -18,6 +18,19 @@ const char Page_Restart[] PROGMEM = R"=====(
 Please Wait....Configuring and Restarting.
 )=====";
 
+// For DS3231 RTC
+#define ENABLE_RTC
+#ifdef ENABLE_RTC
+#include "Wire.h"               //I2C library
+#include "RtcDS3231.h"    //RTC library
+//Hardware i2c default is D1 -> SCL and D2 -> SDA on the wemos D1 mini
+//RTC_DS3231 RTC; //for wire version < 2
+RtcDS3231<TwoWire> _RTC(Wire);
+#endif //ENABLE_RTC
+
+
+
+
 AsyncFSWebServer::AsyncFSWebServer(uint16_t port) : AsyncWebServer(port) {}
 
 /*void AsyncFSWebServer::secondTick()
@@ -31,12 +44,19 @@ AsyncFSWebServer::AsyncFSWebServer(uint16_t port) : AsyncWebServer(port) {}
 }*/
 
 void AsyncFSWebServer::s_secondTick(void* arg) {
-    AsyncFSWebServer* self = reinterpret_cast<AsyncFSWebServer*>(arg);
+  /*AsyncFSWebServer* self = reinterpret_cast<AsyncFSWebServer*>(arg);
     if (self->_evs.count() > 0) {
         self->sendTimeData();
-    }
-}
+    }*/
 
+}
+void AsyncFSWebServer::getTime() {
+
+  _curTime = _RTC.GetDateTime();
+
+
+}
+/*
 void AsyncFSWebServer::sendTimeData() {
     String data = "{";
     data += "\"time\":\"" + NTP.getTimeStr() + "\",";
@@ -51,7 +71,7 @@ void AsyncFSWebServer::sendTimeData() {
     data = String();
     //DEBUGLOG(__PRETTY_FUNCTION__);
     //DEBUGLOG("\r\n")
-}
+}*/
 
 String formatBytes(size_t bytes) {
     if (bytes < 1024) {

@@ -101,15 +101,6 @@ byte fadingDelay = 20;
 byte fadingStep = 1;
 
 
-// For DS3231 RTC
-//#define ENABLE_RTC
-#ifdef ENABLE_RTC
-#include <Wire.h>               //I2C library
-#include "RtcDS3231.h"    //RTC library
-
-RTC_DS3231 RTC;
-#endif //ENABLE_RTC
-
 void German::ledsOff() {
   if ( wordFading == true && minuteFading == true){
 //    int step = LEDbrightness / 20;                // fade out in 20 steps, 100 ms apart
@@ -220,7 +211,7 @@ void German::writeMinutes(int Minute){
   }
 }
 
-void German::displayWords(){
+void German::displayWords(int minute, int hour){
   // start by clearing the display to a known state
   ledsOff();
   int Words[6] = {1, 0, 0, 0, 0, 0};
@@ -573,7 +564,7 @@ void German::displayWords(){
    writeWords(Words);
 }
 
-void German::displayMinutes(){
+void German::displayMinutes(int minute){
    minutesOff();
    // In order to make use of the four minute LEDs
    if (minute % 5 == 1) {
@@ -594,8 +585,8 @@ void German::displayMinutes(){
   }
 }
 
-void German::getTime(){
-  /*DateTime now = RTC.now();*/
+/*void German::getTime(){
+  DateTime now = RTC.now();
 
   //hour = now.hour();
   //minute = now.minute();
@@ -603,7 +594,7 @@ void German::getTime(){
   hour = 5;
   minute = 2;
   second = 2;
-/*
+
   if (daylightSaving()){
    hour += 1;
   }
@@ -613,8 +604,8 @@ void German::getTime(){
 
   if (hour > 12){
    hour -= 12;
- }*/
-}
+ }
+}*/
 
 void German::Word_Init()
 {
@@ -671,9 +662,9 @@ void German::Word_Init()
   Serial.print(F("."));
   Serial.print(now.year(), DEC);
 */
-  getTime();
-  displayWords();
-  displayMinutes();
+  //getTime();
+  //displayWords();
+  //displayMinutes();
 }
 /*
 void loop(void)

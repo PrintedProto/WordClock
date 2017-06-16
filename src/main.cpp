@@ -13,7 +13,8 @@
 #include "Hash.h"
 #include "german.h"
 
-#define wordledpin D3
+#define wordledpin D5
+//Hardware i2c default is D1 -> SCL and D2 -> SDA on the wemos D1 mini
 
 void setup() {
     // WiFi is started inside library
