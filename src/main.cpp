@@ -32,6 +32,11 @@ void setup() {
 
 void loop() {
     /* add main program code here */
+    if(ESPHTTPServer.chkTk()){
+      if(ESPHTTPServer.getTime()){
+        ESPHTTPServer.showTime();
+      }
+    }
 
     // DO NOT REMOVE. Attend OTA update from Arduino IDE
     //ESPHTTPServer.handle();

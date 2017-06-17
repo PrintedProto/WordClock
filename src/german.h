@@ -16,8 +16,8 @@ public:
 	void minutesOff();
 	void writeWords(int Words[]);
 	void writeMinutes(int Minute);
-	void displayWords(int minute, int hour);
-	void displayMinutes(int minute);
+	void displayWords(byte minute, byte hour);
+	void displayMinutes(byte minute);
 	//void getTime();
 	//void Word_Init();
 	//byte hour, minute, second;

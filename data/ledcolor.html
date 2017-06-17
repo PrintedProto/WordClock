@@ -1,6 +1,8 @@
 <!DOCTYPE html><html><head><title>RGB control</title><meta name='mobile-web-app-capable' content='yes' />
-<meta name='viewport' content='width=device-width' /></head><body style='margin: 0px; padding: 0px;'>
-<canvas id='colorspace'></canvas></body>
+<meta name='viewport' content='width=device-width' /></head>
+<body style='margin: 0px; padding: 0px;'>
+  <canvas id='colorspace'></canvas>
+</body>
 <script type='text/javascript'>
 (function () {
  var canvas = document.getElementById('colorspace');
@@ -11,7 +13,7 @@
  colours.addColorStop(i/360, 'hsl(' + i + ', 100%, 50%)');
  }
  ctx.fillStyle = colours;
- ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+ ctx.fillRect(0, 0, window.innerWidth-100, window.innerHeight-100);
  var luminance = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
  luminance.addColorStop(0, '#ffffff');
  luminance.addColorStop(0.05, '#ffffff');

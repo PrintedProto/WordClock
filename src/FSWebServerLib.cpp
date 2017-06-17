@@ -29,45 +29,66 @@ Please Wait....Configuring and Restarting.
 RtcDS3231<TwoWire> _RTC(Wire);
 #endif //ENABLE_RTC
 
-
-
-
 AsyncFSWebServer::AsyncFSWebServer(uint16_t port) : AsyncWebServer(port) {}
 
-/*void AsyncFSWebServer::secondTick()
-{
-    _secondFlag = true;
-}*/
+void AsyncFSWebServer::showTime() {
+    _word->displayMinutes(_curTime.Minute());
+    _word->displayWords(_curTime.Minute(),_curTime.Hour());
+}
 
-/*void AsyncFSWebServer::secondTask() {
-    //DEBUGLOG("%s\r\n", NTP.getTimeDateString().c_str());
-    sendTimeData();
-}*/
+bool AsyncFSWebServer::_secondFlag = false;
 
-void AsyncFSWebServer::s_secondTick(void* arg) {
+bool AsyncFSWebServer::getTime() {
+  if (_RTC.GetIsRunning()){
+    if(_RTC.IsDateTimeValid()){
+      _curTime = _RTC.GetDateTime();
+      _secondFlag = false;
+      return true;
+    }
+    return false;
+  } else {
+    _RTC.SetIsRunning(true);
+    return false;
+  }
+}
+
+//void AsyncFSWebServer::s_secondTick(void* arg) {
+void AsyncFSWebServer::s_secondTick(){
   /*AsyncFSWebServer* self = reinterpret_cast<AsyncFSWebServer*>(arg);
     if (self->_evs.count() > 0) {
         self->sendTimeData();
     }*/
-
-}
-void AsyncFSWebServer::getTime() {
-
-  _curTime = _RTC.GetDateTime();
-
-
+    _secondFlag = true;
 }
 
+bool AsyncFSWebServer::chkTk(){
+  if(_secondFlag){
+    _secondFlag = false;
+    return true;
+  } else {
+    return false;
+  }
+}
 void AsyncFSWebServer::Word_Init(German * _wordAddress) {
   _word = _wordAddress;
   _word->setBrightness(_word->LEDbrightness);
   _word->begin();
   _word->show();
-  getTime();
-  _word->displayMinutes(_curTime.Minute());
-
+  if(getTime()){
+    showTime();
+  }
 }
 
+void AsyncFSWebServer::toggleTicker(bool state, float sec) {
+  if(state){
+    if (_RTC.GetIsRunning()){
+      //_secondTk.attach(20.0f, &AsyncFSWebServer::s_secondTick, static_cast<void*>(this)); // Task to run periodic things every 20 second
+      _secondTk.attach(sec,s_secondTick);
+    }
+  }else {
+    _secondTk.detach();
+  }
+}
 
 /*
 void AsyncFSWebServer::sendTimeData() {
@@ -113,10 +134,10 @@ void flashLED(int pin, int times, int delayTime) {
 
 void AsyncFSWebServer::begin(FS* fs) {
     _fs = fs;
-    DBG_OUTPUT_PORT.begin(115200);
-    DBG_OUTPUT_PORT.print("\n\n");
+    //DBG_OUTPUT_PORT.begin(115200);
+    //DBG_OUTPUT_PORT.print("\n\n");
 #ifndef RELEASE
-    DBG_OUTPUT_PORT.setDebugOutput(true);
+    //DBG_OUTPUT_PORT.setDebugOutput(true);
 #endif // RELEASE
     // NTP client setup
     if (CONNECTION_LED >= 0) {
@@ -162,22 +183,6 @@ void AsyncFSWebServer::begin(FS* fs) {
     WiFi.mode(WIFI_AP_STA);
     configureWifi(); //printedproto
 
-#ifdef ENABLE_RTC
-    _RTC.Begin();
-    if(!_RTC.IsDateTimeValid()){
-      _curTime = RtcDateTime(98, 06, 28, 04, 20, 00); //RtcDateTime(year, month, dayOfMonth, hour, minute, second);
-     //date stored on rtc is wrong or no date if no cr2032 installed defaults to the year The Undertaker threw Mankind off Hell In A Cell, and plummeted 16 ft through an announcer’s table.
-    _RTC.SetDateTime(_curTime);
-    }
-    if (!_RTC.GetIsRunning())
-    {
-        //Serial.println("RTC was not actively running, starting now");
-        _RTC.SetIsRunning(true);
-    }
-    _RTC.Enable32kHzPin(false);
-    _RTC.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
-#endif
-
     /*
     DEBUGLOG("Open http://");//printedproto
     DEBUGLOG(_config.deviceName.c_str());
@@ -194,7 +199,24 @@ void AsyncFSWebServer::begin(FS* fs) {
 
     //ConfigureOTA(_httpAuth.wwwPassword.c_str());//printedproto
     //DEBUGLOG("END Setup\n");//printedproto
-    _secondTk.attach(20.0f, &AsyncFSWebServer::s_secondTick, static_cast<void*>(this)); // Task to run periodic things every second
+    #ifdef ENABLE_RTC
+        _RTC.Begin();
+        if(!_RTC.IsDateTimeValid()){
+          _curTime = RtcDateTime(98, 06, 28, 04, 20, 00); //RtcDateTime(year, month, dayOfMonth, hour, minute, second);
+         //date stored on rtc is wrong or no date if no cr2032 installed defaults to the year The Undertaker threw Mankind off Hell In A Cell, and plummeted 16 ft through an announcer’s table.
+        _RTC.SetDateTime(_curTime);
+        } else {
+          getTime();
+        }
+        if (!_RTC.GetIsRunning()) {
+            //Serial.println("RTC was not actively running, starting now");
+            _RTC.SetIsRunning(true);
+        }
+        _RTC.Enable32kHzPin(false);
+        _RTC.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
+        toggleTicker(true, 20.0f); //check rtc every 20 seconds by default
+
+    #endif
 }
 
 bool AsyncFSWebServer::load_config() {
@@ -1145,6 +1167,41 @@ void AsyncFSWebServer::disConnect(AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "OK");
     WiFi.disconnect();
 }
+void AsyncFSWebServer::handleTime(AsyncWebServerRequest *request) {
+  int yr;
+  byte mn, dy, hh, mm;
+  if (request->args() > 0)  // Save Settings
+  {
+      for (uint8_t i = 0; i < request->args(); i++) {
+          if (request->argName(i) == "yr") { yr = request->arg(i).toInt();	continue; }
+          if (request->argName(i) == "mn") { mn = request->arg(i).toInt(); continue; }
+          if (request->argName(i) == "dy") { dy = request->arg(i).toInt(); continue; }
+          if (request->argName(i) == "hh") { hh = request->arg(i).toInt(); continue; }
+          if (request->argName(i) == "mm") { mm = request->arg(i).toInt(); continue; }
+          //if (request->argName(i) == "ss") { if (checkRange(request->arg(i))) 	_config.ip[3] = request->arg(i).toInt(); continue; }
+        }
+        _curTime = RtcDateTime(2000-yr, mn, dy, hh, mm, 00);
+        if (!_RTC.GetIsRunning()) {
+            //Serial.println("RTC was not actively running, starting now");
+            _RTC.SetIsRunning(true);
+        }
+        _RTC.SetDateTime(_curTime);
+        showTime();
+    } else {
+      String json = "[";
+      json += "{";
+      json += "\"yr\":" + String(_curTime.Year()) ;
+      json += ",\"mn\":" + String(_curTime.Month()) ;
+      json += ",\"dy\":" + String(_curTime.Day()) ;
+      json += ",\"hh\":" + String(_curTime.Hour()) ;
+      json += ",\"mm\":" + String(_curTime.Minute()) ;
+      json += "}";
+      json += "]";
+      request->send(200, "text/json", json);
+      json = "";
+    }
+
+}
 void AsyncFSWebServer::serverInit() {
     //SERVER INIT
     //list directory
@@ -1301,7 +1358,12 @@ void AsyncFSWebServer::serverInit() {
     }, [this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
         this->updateFirmware(request, filename, index, data, len, final);
     });
-
+    on("/time", [this](AsyncWebServerRequest *request) {
+        if (!this->checkAuth(request))
+            return request->requestAuthentication();
+        //DBG_OUTPUT_PORT.println("md5?");
+        this->handleTime(request);
+    });
     //called when the url is not defined here
     //use it to load content from SPIFFS
     onNotFound([this](AsyncWebServerRequest *request) {

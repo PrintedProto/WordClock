@@ -73,10 +73,15 @@ public:
     AsyncFSWebServer(uint16_t port);
     void begin(FS* fs);
     void handle();
-    void getTime();
+    bool getTime();
+    void showTime();
     void Word_Init(German * _wordAddress);
     RtcDateTime _curTime; //RtcDateTime(year, month, dayOfMonth, hour, minute, second);
     German * _word;
+    bool chkTk();
+    static bool _secondFlag;
+
+
 
 protected:
     strConfig _config; // General and WiFi configuration
@@ -92,7 +97,7 @@ protected:
     //uint currentWifiStatus;
 
     Ticker _secondTk;
-    bool _secondFlag;
+
 
     AsyncEventSource _evs = AsyncEventSource("/events");
 
@@ -110,7 +115,9 @@ protected:
     void onWiFiConnected(WiFiEventStationModeConnected data);
     void onWiFiDisconnected(WiFiEventStationModeDisconnected data);
 
-    static void s_secondTick(void* arg);
+    //static void s_secondTick(void* arg);
+    static void s_secondTick();
+
 
     String getMacAddress();
 
@@ -136,6 +143,9 @@ protected:
     void setUpdateMD5(AsyncWebServerRequest *request);
     void updateFirmware(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
     void disConnect(AsyncWebServerRequest *request);
+    void handleTime(AsyncWebServerRequest *request);
+    void toggleTicker(bool state, float sec);
+    
 
     static String urldecode(String input); // (based on https://code.google.com/p/avr-netino/)
     static unsigned char h2int(char c);

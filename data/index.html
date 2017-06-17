@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<strong>Welcome to WordClock</strong>
+<hr class=index>
+<table style="width:400px">
+  <tr>
+    <td>Current date:</td>
+    <td id="curDate">polling</td>
+  </tr>
+  <tr>
+    <td>Current time:</td>
+    <td id="curTime">polling</td>
+  </tr>
+</table>
+<br>
+<br>
+<table style="width:400px">
+  <tr>Brightness</tr>
+  <tr>
+    <td id="sBri">Set</td>
+    <td><input type="range" id="Bri" value="90"></td>
+    <td id="bBri" class="box"></td>
+  </tr>
+</table>
+<br>
+<br>
+<table style="width:400px">
+  <tr>
+    <td>Current date:</td>
+    <td id="curDate">Current date:</td>
+    <td id="curDate">Current date:</td>
+  </tr>
+</table>
+
+
+
+
+
+
+
+
+<script language="javascript" type="text/javascript">
+
+  var briVal = 150;
+
+  function startTime(res) {
+
+    if (!res || (res.target.responseText == '[]')) {
+      setTimeout(function () { getTime(); }, 5000);
+      document.getElementById('curDate').innerHTML = "polling";
+      document.getElementById('curTime').innerHTML = "polling";
+      return;
+    }
+    var resp = JSON.parse(res.target.responseText);
+    var mtnum = resp.mn;
+    var mt = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]
+
+    document.getElementById('curDate').innerHTML = resp.yr + " / " + mt[parseint(mtnum)-1] + " / " + resp.dy;
+    document.getElementById('curTime').innerHTML = resp.hh + " : " + checkTime(resp.mm) ;
+  }
+  function checkTime(i) {
+    if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+    return i;
+  }
+
+	window.onload = function ()
+	{
+		load("style.css","css", function()
+		{
+			load("microajax.js","js", function()
+			{
+				// Do something after load...
+			});
+		});
+	}
+	function load(e,t,n) {
+		if("js"==t) {
+			var a=document.createElement("script");
+			a.src=e,
+			a.type="text/javascript",
+			a.async=!1,
+			a.onload=function() { n() },
+			document.getElementsByTagName("head")[0].appendChild(a)
+		}
+		else if("css"==t) {
+			var a=document.createElement("link");
+			a.href=e,
+			a.rel="stylesheet",
+			a.type="text/css",
+			a.async=!1,
+			a.onload=function(){ n() },
+			document.getElementsByTagName("head")[0].appendChild(a)
+		}
+	}
+
+</script>

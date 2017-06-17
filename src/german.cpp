@@ -205,7 +205,7 @@ void German::writeMinutes(int Minute){
   }
 }
 
-void German::displayWords(int minute, int hour){
+void German::displayWords(byte minute, byte hour){
   // start by clearing the display to a known state
   ledsOff();
   int Words[6] = {1, 0, 0, 0, 0, 0};
@@ -558,7 +558,7 @@ void German::displayWords(int minute, int hour){
    writeWords(Words);
 }
 
-void German::displayMinutes(int minute){
+void German::displayMinutes(byte minute){
    minutesOff();
    // In order to make use of the four minute LEDs
    if (minute % 5 == 1) {
@@ -578,179 +578,3 @@ void German::displayMinutes(int minute){
 //    //Serial.print(F("+4"));
   }
 }
-
-
-
-//void German::Word_Init()
-//{
-  // initialise the hardware
-  // initialize the appropriate pins as outputs:
-
-  // NOTE acc. to arduino.cc: If the pin isn't connected to anything, digitalRead() can return either HIGH or LOW (and this can change randomly).
-  // This is also prevented by using the internal pullup!
-  //pinMode(IncBrightPin, INPUT_PULLUP);
-  //pinMode(RedBrightPin, INPUT_PULLUP);
-  //pinMode(colourChangePin, INPUT_PULLUP);
-  //pinMode(colourCyclePin, INPUT_PULLUP);
-
-  // Initialize the LEDs
-//  setBrightness(LEDbrightness);
-  //minutePixels.setBrightness(LEDbrightness);
-//  begin();
-//  show();
-  //minutePixels.begin();
-  //minutePixels.show();
-
-  ////Serial.begin(9600);
-  ////Serial.println(F("Starting clock"));
-
-/*
-  // For RTC
-  // To power the RTC from Pins A2 and A3
-  pinMode(RTC_VCC, OUTPUT);
-  digitalWrite(RTC_VCC, HIGH);
-//  pinMode(RTC_GND, OUTPUT);
-//  digitalWrite(RTC_GND, LOW);
-
-  Wire.begin();
-  RTC.begin();
-  if (RTC.lostPower()) {
-    //Serial.println("RTC lost power - readjusting.");
-    // following line sets the RTC to the date & time this sketch was compiled
-    RTC.adjust(DateTime(__DATE__, __TIME__));
-  } else {
-    //Serial.println("RTC did not lose power - no need to set time.");
-  }
-
-  DateTime now = RTC.now();
-  //Serial.print(F("From RTC: "));
-  //Serial.print(now.hour(), DEC);
-  //Serial.print(F(" h, "));
-  //Serial.print(now.minute(), DEC);
-  //Serial.print(F(" min, "));
-  //Serial.print(now.second(), DEC);
-  //Serial.print(F(" s ; "));
-  //Serial.print(now.day(), DEC);
-  //Serial.print(F("."));
-  //Serial.print(now.month(), DEC);
-  //Serial.print(F("."));
-  //Serial.print(now.year(), DEC);
-*/
-  //getTime();
-  //displayWords();
-  //displayMinutes();
-//}
-/*
-void loop(void)
-{
-  unsigned int lastsec = second;
-
-  getTime();
-
-  // To refresh the display once [ second == 0 && abs(second-lastsec)!=0 ] every five minutes [ minute % 5 == 0  ; note: 0 modulo 5 = 0 ]
-  if (minute % 5 ==0 && second == 0 && abs(second-lastsec)!=0){
-//    //Serial.print(hour);
-//    //Serial.print(F(" h, "));
-//    //Serial.print(minute);
-//    //Serial.print(F(" min, "));
-//    //Serial.print(second);
-//    //Serial.println(F(" s"));
-    displayWords();
-  }
-
-  // To make use of the four minute LEDs
-  if (second == 0 && abs(second-lastsec)!=0 && minute % 5 != 0){
-    displayMinutes();
-  }
-
-  if (digitalRead(IncBrightPin) == LOW)
-  {
-    if ((LEDbrightness+10) <= maxBrightness)
-    {
-        LEDbrightness += 10;
-        //Serial.println("");
-        //Serial.print(F("LED brightness set to: "));
-        //Serial.print(LEDbrightness);
-    }
-    else{
-        LEDbrightness = maxBrightness;
-        //Serial.println("");
-        //Serial.print(F("LED brightness set to: "));
-        //Serial.print(LEDbrightness);
-    }
-    // set the new brightness on all LEDs that are on
-    for ( int j = 0 ; j < wordLEDS ; j++ ){                 // every LED...
-      if ( wordPixels.getPixelColor(j) != 0){               // that is not off (has a colour)
-        wordPixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
-      }
-    }
-    wordPixels.show();
-    delay(500);
-  }
-
-
-  if (digitalRead(RedBrightPin) == LOW)
-  {
-    if ((LEDbrightness) >= 30)
-    {
-        LEDbrightness -= 10;
-        //Serial.println("");
-        //Serial.print(F("LED brightness set to: "));
-        //Serial.print(LEDbrightness);
-    }
-    // set the new brightness on all LEDs that are on
-    for ( int j = 0 ; j < wordLEDS ; j++ ){                 // every LED...
-      if ( wordPixels.getPixelColor(j) != 0){               // that is not off (has a colour)
-        wordPixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
-      }
-    }
-    for ( int j = 0 ; j < minuteLEDS ; j++ ){
-      if ( minutePixels.getPixelColor(j) != 0){
-        minutePixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
-      }
-    }
-    wordPixels.show();
-    minutePixels.show();
-    delay(500);
-  }
-
-  if (digitalRead(colourChangePin) == LOW){
-    if(colourChange < 8 ){
-      colourChange++;
-    } else { colourChange = 0; };
-
-    //Serial.println("");
-    //Serial.print(F("Setting colour to: "));
-    //Serial.print(colourName[colourChange]);
-    rValue = colours[colourChange][0];
-    gValue = colours[colourChange][1];
-    bValue = colours[colourChange][2];
-    //Serial.print(F("; rValue: "));
-    //Serial.print(rValue);
-    //Serial.print(F("; gValue: "));
-    //Serial.print(gValue);
-    //Serial.print(F("; bValue: "));
-    //Serial.print(bValue);
-
-    // set the new colour on all LEDs that are on
-    for ( int j = 0 ; j < wordLEDS ; j++ ){                 // every LED
-      if ( wordPixels.getPixelColor(j) != 0){               // that is not off
-        wordPixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
-      }
-    }
-    for ( int j = 0 ; j < minuteLEDS ; j++ ){
-      if ( minutePixels.getPixelColor(j) != 0){
-        minutePixels.setPixelColor(j,LEDbrightness*rValue/255,LEDbrightness*gValue/255,LEDbrightness*bValue/255);
-      }
-    }
-    wordPixels.show();
-    minutePixels.show();
-    delay(500);
-  }
-
-  if (digitalRead(colourCyclePin) == LOW){
-    //Serial.println("");
-    //Serial.print(F("Cycling colour, not yet implemented"));
-    delay(500);
-  }
-}*/
