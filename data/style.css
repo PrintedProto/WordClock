@@ -44,6 +44,9 @@ hr {
 
 .btn--s {
     font-size: 12px;
+    color: #fff;
+    background-color: #0074D9;
+    text-align: center;
 }
 
 .btn--m {
@@ -113,4 +116,7 @@ hr.index{
 .box{
   border-style: solid;
   border-width: 1px;
+  border-radius: 0.3em;
+  text-align: center;
+  cursor: default;
 }

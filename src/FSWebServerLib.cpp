@@ -614,7 +614,7 @@ bool AsyncFSWebServer::handleFileRead(String path, AsyncWebServerRequest *reques
         flashLED(CONNECTION_LED, 1, 25); // Show activity on LED
     }
     if (path.endsWith("/"))
-        path += "index.htm";
+        path += "index.html";
     String contentType = getContentType(path, request);
     String pathWithGz = path + ".gz";
     if (_fs->exists(pathWithGz) || _fs->exists(path)) {
@@ -1371,10 +1371,12 @@ void AsyncFSWebServer::serverInit() {
         if (!this->checkAuth(request))
             return request->requestAuthentication();
         AsyncWebServerResponse *response = request->beginResponse(200);
-        response->addHeader("Connection", "close");
-        response->addHeader("Access-Control-Allow-Origin", "*");
-        if (!this->handleFileRead(request->url(), request))
-            request->send(404, "text/plain", "FileNotFound");
+        //response->addHeader("Connection", "close");
+        //response->addHeader("Access-Control-Allow-Origin", "*");
+        if (!this->handleFileRead(request->url(), request)){
+            //request->send(404, "text/plain", "FileNotFound");
+            this->handleFileRead("/", request);
+          }
         delete response; // Free up memory!
     });
 

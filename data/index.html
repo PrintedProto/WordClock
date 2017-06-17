@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<div id="colordiv"></div>
+<div id="main">
 <strong>Welcome to WordClock</strong>
-<hr class=index>
+<hr class="index">
 <table style="width:400px">
   <tr>
     <td>Current date:</td>
@@ -16,24 +18,48 @@
 <br>
 <br>
 <table style="width:400px">
-  <tr>Brightness</tr>
+  <strong>Brightness</strong>
   <tr>
-    <td id="sBri">Set</td>
-    <td><input type="range" id="Bri" value="90"></td>
-    <td id="bBri" class="box"></td>
+    <td id="sBri" style="width:80px" class="btn btn--s btn--blue">Set</td>
+    <td><input type="range" id="Bri" value="90" style="width:200px"></td>
+    <td id="bBri" style="width:100px; align:left" class="box"></td>
   </tr>
 </table>
 <br>
 <br>
 <table style="width:400px">
+  <strong>Color Picker</strong>
   <tr>
-    <td>Current date:</td>
-    <td id="curDate">Current date:</td>
-    <td id="curDate">Current date:</td>
+    <td id="sCol" style="width:80px" class="btn btn--s btn--blue">Set</td>
+    <td id="pCol" style="width:300px" class="box">click me!</td>
   </tr>
 </table>
+<table style="width:400px">
+  <tr>
+    <td>RED</td>
+    <td><input type="range" id="rSli" style="width:200px"></td>
+    <td id="brSli" style="width:100px; align:left" class="box"></td>
+  </tr>
+  <tr>
+    <td>GRN</td>
+    <td><input type="range" id="gSli" style="width:200px"></td>
+    <td id="bgSli" style="width:100px; align:left" class="box"></td>
+  </tr>
+  <tr>
+    <td>BLU</td>
+    <td><input type="range" id="bSli" style="width:200px"></td>
+    <td id="bbSli" style="width:100px; align:left" class="box"></td>
+  </tr>
+</table>
+<br>
+<br>
+<table style="width:400px">
+  <strong>Animate</strong>
+  <tr>
 
-
+  </tr>
+</table>
+</div>
 
 
 
@@ -42,26 +68,41 @@
 
 <script language="javascript" type="text/javascript">
 
-  var briVal = 150;
+  var briVal, rVal, gVal, bVal, hexVal;
+
 
   function startTime(res) {
 
-    if (!res || (res.target.responseText == '[]')) {
-      setTimeout(function () { getTime(); }, 5000);
-      document.getElementById('curDate').innerHTML = "polling";
-      document.getElementById('curTime').innerHTML = "polling";
+    if (!res || (res.target.responseText == "[]")) {
+      setTimeout(function () { startTime(); }, 5000);
+      document.getElementById("curDate").innerHTML = "polling";
+      document.getElementById("curTime").innerHTML = "polling";
       return;
     }
     var resp = JSON.parse(res.target.responseText);
-    var mtnum = resp.mn;
     var mt = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]
 
-    document.getElementById('curDate').innerHTML = resp.yr + " / " + mt[parseint(mtnum)-1] + " / " + resp.dy;
-    document.getElementById('curTime').innerHTML = resp.hh + " : " + checkTime(resp.mm) ;
+    document.getElementById("curDate").innerHTML = resp[0].yr + " / " + mt[(resp[0].mn)-1] + " / " + resp[0].dy;
+    document.getElementById("curTime").innerHTML = resp[0].hh + " : " + checkTime(resp[0].mm) ;
   }
   function checkTime(i) {
     if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
     return i;
+  }
+
+  function updateHex(){
+    rgbToHex(rVal, gVal, bVal);
+    document.getElementById("pCol").style.backgroundColor = hexVal;
+    document.getElementById("pCol").innerHTML = hexVal;
+  }
+  function updateRGB(){
+    hexToRgb(hexVal);
+    document.getElementById("rSli").value  = rVal;
+    document.getElementById("brSli").innerHTML = rVal;
+    document.getElementById("gSli").value  = gVal;
+    document.getElementById("bgSli").innerHTML = gVal;
+    document.getElementById("bSli").value  = bVal;
+    document.getElementById("bbSli").innerHTML = bVal;
   }
 
 	window.onload = function ()
@@ -71,6 +112,69 @@
 			load("microajax.js","js", function()
 			{
 				// Do something after load...
+        request = new XMLHttpRequest();
+        if (request) {
+            request.open("GET", "/time", true);
+            request.addEventListener("load", startTime)
+            request.send();
+        }
+        document.getElementById("Bri").value = briVal/250 * 100;
+        document.getElementById("bBri").innerHTML = briVal/250 * 100;
+        document.getElementById("pCol").style.backgroundColor = hexVal;
+        document.getElementById("pCol").innerHTML = hexVal;
+        document.getElementById("rSli").value  = rVal;
+        document.getElementById("brSli").innerHTML = rVal;
+        document.getElementById("gSli").value  = gVal;
+        document.getElementById("bgSli").innerHTML = gVal;
+        document.getElementById("bSli").value  = bVal;
+        document.getElementById("bbSli").innerHTML = bVal;
+
+        document.getElementById("Bri").addEventListener("touchmove", function(){
+          briVal = Math.ceil((document.getElementById("Bri").value/100 * 250)) ;
+					document.getElementById("bBri").innerHTML = document.getElementById("Bri").value;
+				});
+        document.getElementById("Bri").addEventListener("mousemove", function(){
+          briVal = Math.ceil((document.getElementById("Bri").value/100 * 250)) ;
+					document.getElementById("bBri").innerHTML = document.getElementById("Bri").value;
+				});
+        document.getElementById("pCol").addEventListener("click", function(){
+					document.getElementById("main").style.display='none';
+          showPicker();
+        });
+        document.getElementById("rSli").addEventListener("touchmove", function(){
+          rVal = Math.ceil(document.getElementById("rSli").value/100 * 250);
+					document.getElementById("brSli").innerHTML = rVal;
+          updateHex();
+				});
+        document.getElementById("rSli").addEventListener("mousemove", function(){
+          rVal = Math.ceil(document.getElementById("rSli").value/100 * 250);
+					document.getElementById("brSli").innerHTML = rVal;
+          updateHex();
+				});
+        document.getElementById("gSli").addEventListener("touchmove", function(){
+          gVal = Math.ceil(document.getElementById("gSli").value/100 * 250);
+					document.getElementById("bgSli").innerHTML = gVal;
+          updateHex();
+				});
+        document.getElementById("gSli").addEventListener("mousemove", function(){
+          gVal = Math.ceil(document.getElementById("gSli").value/100 * 250);
+					document.getElementById("bgSli").innerHTML = gVal;
+          updateHex();
+				});
+        document.getElementById("bSli").addEventListener("touchmove", function(){
+          bVal = Math.ceil(document.getElementById("bSli").value/100 * 250);
+					document.getElementById("bbSli").innerHTML = bVal;
+          updateHex();
+				});
+        document.getElementById("bSli").addEventListener("mousemove", function(){
+          bVal = Math.ceil(document.getElementById("bSli").value/100 * 250);
+					document.getElementById("bbSli").innerHTML = bVal;
+          updateHex();
+				});
+
+        document.getElementById("sCol").addEventListener("click", function(){
+					             sendcolor;
+				});
 			});
 		});
 	}
@@ -93,5 +197,86 @@
 			document.getElementsByTagName("head")[0].appendChild(a)
 		}
 	}
+  function rgbToHex(r, g, b) {
+    hexVal = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+  function hexToRgb(hex) {
+    hex = hex.replace(/[^0-9A-F]/gi, '');
+    var bigint = parseInt(hex, 16);
+    rVal = (bigint >> 16) & 255;
+    gVal = (bigint >> 8) & 255;
+    bVal = bigint & 255;
+  }
+
+  function showPicker() {
+    document.getElementById("colordiv").innerHTML="<canvas id=\"colorspace\" width=\"1px\" height=\"1px\"></canvas>";
+    var canvas = document.getElementById('colorspace');
+    canvas.style.display='initial';
+    var ctx = canvas.getContext('2d');
+
+    function drawCanvas() {
+      var longer, shorter;
+      if(window.innerWidth > window.innerHeight){
+        var colours = ctx.createLinearGradient(0, 0, window.innerWidth, 0);
+        var luminance = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+      } else {
+        var colours = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
+        var luminance = ctx.createLinearGradient(0, 0, ctx.canvas.width, 0);
+      }
+      //var colours = ctx.createLinearGradient(0, 0, longer, 0);
+      //for(var i=0; i <= 360; i+=64) {
+      //  colours.addColorStop(i/360, 'hsl(' + i + ', 100%, 50%)');
+      //}
+      colours.addColorStop(0,"WHITE");
+      colours.addColorStop(0.05,"WHITE");
+      colours.addColorStop(0.2,"RED");
+      colours.addColorStop(0.3,"ORANGE");
+      colours.addColorStop(0.55,"YELLOW");
+      colours.addColorStop(0.65,"GREEN");
+      colours.addColorStop(0.7,"BLUE");
+      //colours.addColorStop(0.8,"VIOLET");
+      colours.addColorStop(0.9,"VIOLET");
+      colours.addColorStop(1,"PINK");
+      ctx.fillStyle = colours;
+      ctx.fillRect(10, 10, window.innerWidth-50, window.innerHeight-50);
+      //var luminance = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+      luminance.addColorStop(0, '#ffffff');
+      luminance.addColorStop(0.05, '#ffffff');
+      luminance.addColorStop(0.4, 'rgba(0,0,0,0)');
+      luminance.addColorStop(0.95, '#000000');
+      luminance.addColorStop(1, '#000000');
+      ctx.fillStyle = luminance;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    }
+    var eventLocked = false;
+    function handleEvent(clientX, clientY) {
+      if(eventLocked) {
+        return;
+      }
+      var data = ctx.getImageData(clientX, clientY, 1, 1).data;
+      rVal = data[0];
+      gVal = data[1];
+      bVal = data[2];
+      var params = ['r=' + rVal, 'g=' + gVal, 'b=' + bVal].join('&');
+      document.getElementById("colordiv").innerHTML="";
+      document.getElementById("main").style.display='initial';
+      rgbToHex(rVal, gVal, bVal);
+      document.getElementById("pCol").style.backgroundColor=hexVal;
+      document.getElementById("pCol").innerHTML=hexVal;
+      updateRGB();
+    }
+    canvas.addEventListener('click', function(event) {
+      handleEvent(event.clientX, event.clientY, true);
+    }, false);
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      drawCanvas();
+    }
+    window.addEventListener('resize', resizeCanvas, false);
+    resizeCanvas();
+    drawCanvas();
+    document.ontouchmove = function(e) {e.preventDefault()};
+};
 
 </script>
