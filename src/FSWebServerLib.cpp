@@ -122,16 +122,6 @@ void AsyncFSWebServer::begin(FS* fs) {
     if (CONNECTION_LED >= 0) {
         pinMode(CONNECTION_LED, OUTPUT); // CONNECTION_LED pin defined as output
     }
-    /*
-    if (AP_ENABLE_BUTTON >= 0) {
-        pinMode(AP_ENABLE_BUTTON, INPUT_PULLUP); // If this pin is HIGH during startup ESP will run in AP_ONLY mode. Backdoor to change WiFi settings when configured WiFi is not available.
-    }
-    //analogWriteFreq(200);
-
-    if (AP_ENABLE_BUTTON >= 0) {
-        _apConfig.APenable = !digitalRead(AP_ENABLE_BUTTON); // Read AP button. If button is pressed activate AP
-        //DEBUGLOG("AP Enable = %d\n", _apConfig.APenable);//printedproto
-    }*/
 
     if (CONNECTION_LED >= 0) {
         digitalWrite(CONNECTION_LED, HIGH); // Turn LED off
@@ -171,16 +161,23 @@ void AsyncFSWebServer::begin(FS* fs) {
     WiFi.hostname(_config.deviceName.c_str());
     WiFi.mode(WIFI_AP_STA);
     configureWifi(); //printedproto
-    /*
-    if (AP_ENABLE_BUTTON >= 0) {
-        if (_apConfig.APenable) {
-            configureWifiAP(); // Set AP mode if AP button was pressed
-        } else {
-            configureWifi(); // Set WiFi config
-        }
-    } else {
-        configureWifi(); // Set WiFi config
-    }*///printedproto
+
+#ifdef ENABLE_RTC
+    _RTC.Begin();
+    if(!_RTC.IsDateTimeValid()){
+      _curTime = RtcDateTime(98, 06, 28, 04, 20, 00); //RtcDateTime(year, month, dayOfMonth, hour, minute, second);
+     //date stored on rtc is wrong or no date if no cr2032 installed defaults to the year The Undertaker threw Mankind off Hell In A Cell, and plummeted 16 ft through an announcer’s table.
+    _RTC.SetDateTime(_curTime);
+    }
+    if (!_RTC.GetIsRunning())
+    {
+        //Serial.println("RTC was not actively running, starting now");
+        _RTC.SetIsRunning(true);
+    }
+    _RTC.Enable32kHzPin(false);
+    _RTC.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
+#endif
+
     /*
     DEBUGLOG("Open http://");//printedproto
     DEBUGLOG(_config.deviceName.c_str());
@@ -189,15 +186,15 @@ void AsyncFSWebServer::begin(FS* fs) {
     DEBUGLOG("Scketch size: %u\r\n", ESP.getSketchSize());
     DEBUGLOG("Free flash space: %u\r\n", ESP.getFreeSketchSpace());*/
 
-    _secondTk.attach(20.0f, &AsyncFSWebServer::s_secondTick, static_cast<void*>(this)); // Task to run periodic things every second
-
     AsyncWebServer::begin();
     serverInit(); // Configure and start Web server
 
     MDNS.begin(_config.deviceName.c_str()); // I've not got this to work. Need some investigation.
     MDNS.addService("http", "tcp", 80);
+
     //ConfigureOTA(_httpAuth.wwwPassword.c_str());//printedproto
     //DEBUGLOG("END Setup\n");//printedproto
+    _secondTk.attach(20.0f, &AsyncFSWebServer::s_secondTick, static_cast<void*>(this)); // Task to run periodic things every second
 }
 
 bool AsyncFSWebServer::load_config() {

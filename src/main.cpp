@@ -15,6 +15,10 @@
 
 #define wordledpin D5
 //Hardware i2c default is D1 -> SCL and D2 -> SDA on the wemos D1 mini
+// DS3231 SDA --> SDA
+// DS3231 SCL --> SCL
+// DS3231 VCC --> 3.3v or 5v
+// DS3231 GND --> GND
 
 void setup() {
     // WiFi is started inside library
