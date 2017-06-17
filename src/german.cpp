@@ -15,12 +15,6 @@
 // Neopixel
 
 German::German(byte wordPIN) : Adafruit_NeoMatrix(11, 11, wordPIN, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ZIGZAG, NEO_GRB + NEO_KHZ800){}
-//Adafruit_NeoMatrix wordPixels = Adafruit_NeoMatrix(11, 11, wordPIN, NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ZIGZAG, NEO_GRB + NEO_KHZ800);
-//}
-//Adafruit_NeoPixel minutePixels = Adafruit_NeoPixel(minuteLEDS, minutePIN, NEO_GRB + NEO_KHZ800);
-//int colourChangePin = 6;
-//int colourChange = 0;
-//int colourCyclePin = 8;
 
 // 80┌--> F N Ü F <-- T S I <-- S E                88   ES IST MFÜNF
 // 79└--  G I Z N A W Z --> N H E Z          <--┐ 69   MZEHN ZWANZIG
@@ -216,8 +210,8 @@ void German::displayWords(int minute, int hour){
   ledsOff();
   int Words[6] = {1, 0, 0, 0, 0, 0};
 
-  Serial.println("");
-  Serial.print(F("ES IST "));
+  //Serial.println("");
+  //Serial.print(F("ES IST "));
 
   // now we display the appropriate minute counter
   if ((minute>4) && (minute<10)) {
@@ -226,7 +220,7 @@ void German::displayWords(int minute, int hour){
     // NACH;
     Words[Words[0]+2] = 6;
     Words[0] += 2;
-    Serial.print(F("FUENF NACH "));
+    //Serial.print(F("FUENF NACH "));
   }
   if ((minute>9) && (minute<15)) {
     // MZEHN;
@@ -234,7 +228,7 @@ void German::displayWords(int minute, int hour){
     // NACH;
     Words[Words[0]+2] = 6;
     Words[0] += 2;
-    Serial.print(F("ZEHN NACH "));
+    //Serial.print(F("ZEHN NACH "));
   }
   if ((minute>14) && (minute<20)) {
     // VIERTEL;
@@ -242,7 +236,7 @@ void German::displayWords(int minute, int hour){
     // NACH;
     Words[Words[0]+2] = 6;
     Words[0] += 2;
-    Serial.print(F("VIERTEL NACH "));
+    //Serial.print(F("VIERTEL NACH "));
   }
   if ((minute>19) && (minute<25)) {
     // ZWANZIG;
@@ -250,7 +244,7 @@ void German::displayWords(int minute, int hour){
     // NACH;
     Words[Words[0]+2] = 6;
     Words[0] += 2;
-    Serial.print(F("ZWANZIG NACH "));
+    //Serial.print(F("ZWANZIG NACH "));
   }
   if ((minute>24) && (minute<30)) {
     // MFUENF;
@@ -260,13 +254,13 @@ void German::displayWords(int minute, int hour){
     // HALB;
     Words[Words[0]+3] = 8;
     Words[0] += 3;
-    Serial.print(F("FUENF VOR HALB "));
+    //Serial.print(F("FUENF VOR HALB "));
   }
   if ((minute>29) && (minute<35)) {
     // HALB;
     Words[Words[0]+1] = 8;
     Words[0] += 1;
-    Serial.print(F("HALB "));
+    //Serial.print(F("HALB "));
   }
   if ((minute>34) && (minute<40)) {
     // MFUENF;
@@ -276,7 +270,7 @@ void German::displayWords(int minute, int hour){
     // HALB;
     Words[Words[0]+3] = 8;
     Words[0] += 3;
-    Serial.print(F("FUENF NACH HALB "));
+    //Serial.print(F("FUENF NACH HALB "));
   }
   if ((minute>39) && (minute<45)) {
     // ZWANZIG;
@@ -284,7 +278,7 @@ void German::displayWords(int minute, int hour){
     // VOR;
     Words[Words[0]+2] = 7;
     Words[0] += 2;
-    Serial.print(F("ZWANZIG VOR "));
+    //Serial.print(F("ZWANZIG VOR "));
   }
   if ((minute>44) && (minute<50)) {
     // VIERTEL;
@@ -292,7 +286,7 @@ void German::displayWords(int minute, int hour){
     // VOR;
     Words[Words[0]+2] = 7;
     Words[0] += 2;
-    Serial.print(F("VIERTEL VOR "));
+    //Serial.print(F("VIERTEL VOR "));
   }
   if ((minute>49) && (minute<55)) {
     // MZEHN;
@@ -300,7 +294,7 @@ void German::displayWords(int minute, int hour){
     // VOR;
     Words[Words[0]+2] = 7;
     Words[0] += 2;
-    Serial.print(F("ZEHN VOR "));
+    //Serial.print(F("ZEHN VOR "));
   }
   if (minute>54) {
     // MFUENF;
@@ -308,7 +302,7 @@ void German::displayWords(int minute, int hour){
     // VOR;
     Words[Words[0]+2] = 7;
     Words[0] += 2;
-    Serial.print(F("FUENF VOR "));
+    //Serial.print(F("FUENF VOR "));
   }
 
   if (minute <5) {
@@ -317,164 +311,164 @@ void German::displayWords(int minute, int hour){
         // ZWOELF;
         Words[Words[0]+1] = 9;
         Words[0] += 1;
-        Serial.print(F("ZWOELF "));
+        //Serial.print(F("ZWOELF "));
         break;
     case 1:
       // EIN;
       Words[Words[0]+1] = 11;
       Words[0] += 1;
-      Serial.print(F("EIN "));
+      //Serial.print(F("EIN "));
       break;
     case 2:
       // ZWEI;
       Words[Words[0]+1] = 10;
       Words[0] += 1;
-      Serial.print(F("ZWEI "));
+      //Serial.print(F("ZWEI "));
       break;
     case 3:
       // HDREI;
       Words[Words[0]+1] = 14;
       Words[0] += 1;
-      Serial.print(F("DREI "));
+      //Serial.print(F("DREI "));
       break;
     case 4:
       // HVIER;
       Words[Words[0]+1] = 18;
       Words[0] += 1;
-      Serial.print(F("VIER "));
+      //Serial.print(F("VIER "));
       break;
     case 5:
       // HFUENF;
       Words[Words[0]+1] = 15;
       Words[0] += 1;
-      Serial.print(F("FUENF "));
+      //Serial.print(F("FUENF "));
       break;
     case 6:
       // SECHS;
       Words[Words[0]+1] = 21;
       Words[0] += 1;
-      Serial.print(F("SECHS "));
+      //Serial.print(F("SECHS "));
       break;
     case 7:
       // SIEBEN;
       Words[Words[0]+1] = 13;
       Words[0] += 1;
-      Serial.print(F("SIEBEN "));
+      //Serial.print(F("SIEBEN "));
       break;
     case 8:
       // ACHT;
       Words[Words[0]+1] = 19;
       Words[0] += 1;
-      Serial.print(F("ACHT "));
+      //Serial.print(F("ACHT "));
       break;
     case 9:
       // NEUN;
       Words[Words[0]+1] = 17;
       Words[0] += 1;
-      Serial.print(F("NEUN "));
+      //Serial.print(F("NEUN "));
       break;
     case 10:
       // HZEHN;
       Words[Words[0]+1] = 20;
       Words[0] += 1;
-      Serial.print(F("ZEHN "));
+      //Serial.print(F("ZEHN "));
       break;
     case 11:
       // ELF;
       Words[Words[0]+1] = 16;
       Words[0] += 1;
-      Serial.print(F("ELF "));
+      //Serial.print(F("ELF "));
       break;
     case 12:
       // ZWOELF;
       Words[Words[0]+1] = 9;
       Words[0] += 1;
-      Serial.print(F("ZWOELF "));
+      //Serial.print(F("ZWOELF "));
       break;
     }
   // UHR;
   Words[Words[0]+1] = 22;
   Words[0] += 1;
-  Serial.print(F("UHR "));
+  //Serial.print(F("UHR "));
   } else if ((minute < 25) && (minute >4)) {
     switch (hour) {
       case 0:
         // ZWOELF;
         Words[Words[0]+1] = 9;
         Words[0] += 1;
-        Serial.print(F("ZWOELF "));
+        //Serial.print(F("ZWOELF "));
         break;
       case 1:
         // EINS;
         Words[Words[0]+1] = 12;
         Words[0] += 1;
-        Serial.print(F("EINS"));
+        //Serial.print(F("EINS"));
         break;
       case 2:
         // ZWEI;
         Words[Words[0]+1] = 10;
         Words[0] += 1;
-        Serial.print(F("ZWEI "));
+        //Serial.print(F("ZWEI "));
         break;
       case 3:
         // HDREI;
         Words[Words[0]+1] = 14;
         Words[0] += 1;
-        Serial.print(F("DREI "));
+        //Serial.print(F("DREI "));
         break;
       case 4:
         // HVIER;
         Words[Words[0]+1] = 18;
         Words[0] += 1;
-        Serial.print(F("VIER "));
+        //Serial.print(F("VIER "));
         break;
       case 5:
         // HFUENF;
         Words[Words[0]+1] = 15;
         Words[0] += 1;
-        Serial.print(F("FUENF "));
+        //Serial.print(F("FUENF "));
         break;
       case 6:
         // SECHS;
         Words[Words[0]+1] = 21;
         Words[0] += 1;
-        Serial.print(F("SECHS "));
+        //Serial.print(F("SECHS "));
         break;
       case 7:
         // SIEBEN;
         Words[Words[0]+1] = 13;
         Words[0] += 1;
-        Serial.print(F("SIEBEN "));
+        //Serial.print(F("SIEBEN "));
         break;
       case 8:
         // ACHT;
         Words[Words[0]+1] = 19;
         Words[0] += 1;
-        Serial.print(F("ACHT "));
+        //Serial.print(F("ACHT "));
         break;
       case 9:
         // NEUN;
         Words[Words[0]+1] = 17;
         Words[0] += 1;
-        Serial.print(F("NEUN "));
+        //Serial.print(F("NEUN "));
         break;
       case 10:
         // HZEHN;
         Words[Words[0]+1] = 20;
         Words[0] += 1;
-        Serial.print(F("ZEHN "));
+        //Serial.print(F("ZEHN "));
         break;
       case 11:
         // ELF;
         Words[Words[0]+1] = 16;
         Words[0] += 1;
-        Serial.print(F("ELF "));
+        //Serial.print(F("ELF "));
         break;
       case 12:
         // ZWOELF;
         Words[Words[0]+1] = 9;
         Words[0] += 1;
-        Serial.print(F("ZWOELF "));
+        //Serial.print(F("ZWOELF "));
         break;
       }
     } else {
@@ -485,79 +479,79 @@ void German::displayWords(int minute, int hour){
           // EINS;
           Words[Words[0]+1] = 12;
           Words[0] += 1;
-          Serial.print(F("EINS "));
+          //Serial.print(F("EINS "));
           break;
         case 1:
           // ZWEI;
           Words[Words[0]+1] = 10;
           Words[0] += 1;
-          Serial.print(F("ZWEI "));
+          //Serial.print(F("ZWEI "));
           break;
         case 2:
           // HDREI;
           Words[Words[0]+1] = 14;
           Words[0] += 1;
-          Serial.print(F("DREI "));
+          //Serial.print(F("DREI "));
           break;
         case 3:
           // HVIER;
           Words[Words[0]+1] = 18;
           Words[0] += 1;
-          Serial.print(F("VIER "));
+          //Serial.print(F("VIER "));
           break;
         case 4:
           // HFUENF;
           Words[Words[0]+1] = 15;
           Words[0] += 1;
-          Serial.print(F("FUENF "));
+          //Serial.print(F("FUENF "));
           break;
         case 5:
           // SECHS;
           Words[Words[0]+1] = 21;
           Words[0] += 1;
-          Serial.print(F("SECHS "));
+          //Serial.print(F("SECHS "));
           break;
         case 6:
           // SIEBEN;
           Words[Words[0]+1] = 13;
           Words[0] += 1;
-          Serial.print(F("SIEBEN "));
+          //Serial.print(F("SIEBEN "));
           break;
         case 7:
           // ACHT;
           Words[Words[0]+1] = 19;
           Words[0] += 1;
-          Serial.print(F("ACHT "));
+          //Serial.print(F("ACHT "));
           break;
         case 8:
           // NEUN;
           Words[Words[0]+1] = 17;
           Words[0] += 1;
-          Serial.print(F("NEUN "));
+          //Serial.print(F("NEUN "));
           break;
         case 9:
           // HZEHN;
           Words[Words[0]+1] = 20;
           Words[0] += 1;
-          Serial.print(F("ZEHN "));
+          //Serial.print(F("ZEHN "));
           break;
         case 10:
           // ELF;
           Words[Words[0]+1] = 16;
           Words[0] += 1;
-          Serial.print(F("ELF "));
+          //Serial.print(F("ELF "));
           break;
         case 11:
           // ZWOELF;
           Words[Words[0]+1] = 9;
           Words[0] += 1;
-          Serial.print(F("ZWOELF "));
+          //Serial.print(F("ZWOELF "));
           break;
         case 12:
           // EINS;
           Words[Words[0]+1] = 12;
           Words[0] += 1;
-          Serial.print(F("EINS "));
+          //Serial.print(F("EINS "));
           break;
       }
    }
@@ -569,46 +563,26 @@ void German::displayMinutes(int minute){
    // In order to make use of the four minute LEDs
    if (minute % 5 == 1) {
     writeMinutes(0);
-//    Serial.print(F("+1 "));
+//    //Serial.print(F("+1 "));
   }
   if (minute % 5 == 2) {
     writeMinutes(1);
-//    Serial.print(F("+2 "));
+//    //Serial.print(F("+2 "));
   }
   if (minute % 5 == 3) {
     writeMinutes(2);
-//    Serial.print(F("+3 "));
+//    //Serial.print(F("+3 "));
   }
   if (minute % 5 == 4) {
     writeMinutes(3);
-//    Serial.print(F("+4"));
+//    //Serial.print(F("+4"));
   }
 }
 
-/*void German::getTime(){
-  DateTime now = RTC.now();
 
-  //hour = now.hour();
-  //minute = now.minute();
-  //second = now.second();
-  hour = 5;
-  minute = 2;
-  second = 2;
 
-  if (daylightSaving()){
-   hour += 1;
-  }
-  //   else{
-  //     hour += 1;
-  //   }
-
-  if (hour > 12){
-   hour -= 12;
- }
-}*/
-
-void German::Word_Init()
-{
+//void German::Word_Init()
+//{
   // initialise the hardware
   // initialize the appropriate pins as outputs:
 
@@ -620,15 +594,15 @@ void German::Word_Init()
   //pinMode(colourCyclePin, INPUT_PULLUP);
 
   // Initialize the LEDs
-  setBrightness(LEDbrightness);
+//  setBrightness(LEDbrightness);
   //minutePixels.setBrightness(LEDbrightness);
-  begin();
-  show();
+//  begin();
+//  show();
   //minutePixels.begin();
   //minutePixels.show();
 
-  //Serial.begin(9600);
-  //Serial.println(F("Starting clock"));
+  ////Serial.begin(9600);
+  ////Serial.println(F("Starting clock"));
 
 /*
   // For RTC
@@ -641,31 +615,31 @@ void German::Word_Init()
   Wire.begin();
   RTC.begin();
   if (RTC.lostPower()) {
-    Serial.println("RTC lost power - readjusting.");
+    //Serial.println("RTC lost power - readjusting.");
     // following line sets the RTC to the date & time this sketch was compiled
     RTC.adjust(DateTime(__DATE__, __TIME__));
   } else {
-    Serial.println("RTC did not lose power - no need to set time.");
+    //Serial.println("RTC did not lose power - no need to set time.");
   }
 
   DateTime now = RTC.now();
-  Serial.print(F("From RTC: "));
-  Serial.print(now.hour(), DEC);
-  Serial.print(F(" h, "));
-  Serial.print(now.minute(), DEC);
-  Serial.print(F(" min, "));
-  Serial.print(now.second(), DEC);
-  Serial.print(F(" s ; "));
-  Serial.print(now.day(), DEC);
-  Serial.print(F("."));
-  Serial.print(now.month(), DEC);
-  Serial.print(F("."));
-  Serial.print(now.year(), DEC);
+  //Serial.print(F("From RTC: "));
+  //Serial.print(now.hour(), DEC);
+  //Serial.print(F(" h, "));
+  //Serial.print(now.minute(), DEC);
+  //Serial.print(F(" min, "));
+  //Serial.print(now.second(), DEC);
+  //Serial.print(F(" s ; "));
+  //Serial.print(now.day(), DEC);
+  //Serial.print(F("."));
+  //Serial.print(now.month(), DEC);
+  //Serial.print(F("."));
+  //Serial.print(now.year(), DEC);
 */
   //getTime();
   //displayWords();
   //displayMinutes();
-}
+//}
 /*
 void loop(void)
 {
@@ -675,12 +649,12 @@ void loop(void)
 
   // To refresh the display once [ second == 0 && abs(second-lastsec)!=0 ] every five minutes [ minute % 5 == 0  ; note: 0 modulo 5 = 0 ]
   if (minute % 5 ==0 && second == 0 && abs(second-lastsec)!=0){
-//    Serial.print(hour);
-//    Serial.print(F(" h, "));
-//    Serial.print(minute);
-//    Serial.print(F(" min, "));
-//    Serial.print(second);
-//    Serial.println(F(" s"));
+//    //Serial.print(hour);
+//    //Serial.print(F(" h, "));
+//    //Serial.print(minute);
+//    //Serial.print(F(" min, "));
+//    //Serial.print(second);
+//    //Serial.println(F(" s"));
     displayWords();
   }
 
@@ -694,15 +668,15 @@ void loop(void)
     if ((LEDbrightness+10) <= maxBrightness)
     {
         LEDbrightness += 10;
-        Serial.println("");
-        Serial.print(F("LED brightness set to: "));
-        Serial.print(LEDbrightness);
+        //Serial.println("");
+        //Serial.print(F("LED brightness set to: "));
+        //Serial.print(LEDbrightness);
     }
     else{
         LEDbrightness = maxBrightness;
-        Serial.println("");
-        Serial.print(F("LED brightness set to: "));
-        Serial.print(LEDbrightness);
+        //Serial.println("");
+        //Serial.print(F("LED brightness set to: "));
+        //Serial.print(LEDbrightness);
     }
     // set the new brightness on all LEDs that are on
     for ( int j = 0 ; j < wordLEDS ; j++ ){                 // every LED...
@@ -720,9 +694,9 @@ void loop(void)
     if ((LEDbrightness) >= 30)
     {
         LEDbrightness -= 10;
-        Serial.println("");
-        Serial.print(F("LED brightness set to: "));
-        Serial.print(LEDbrightness);
+        //Serial.println("");
+        //Serial.print(F("LED brightness set to: "));
+        //Serial.print(LEDbrightness);
     }
     // set the new brightness on all LEDs that are on
     for ( int j = 0 ; j < wordLEDS ; j++ ){                 // every LED...
@@ -745,18 +719,18 @@ void loop(void)
       colourChange++;
     } else { colourChange = 0; };
 
-    Serial.println("");
-    Serial.print(F("Setting colour to: "));
-    Serial.print(colourName[colourChange]);
+    //Serial.println("");
+    //Serial.print(F("Setting colour to: "));
+    //Serial.print(colourName[colourChange]);
     rValue = colours[colourChange][0];
     gValue = colours[colourChange][1];
     bValue = colours[colourChange][2];
-    Serial.print(F("; rValue: "));
-    Serial.print(rValue);
-    Serial.print(F("; gValue: "));
-    Serial.print(gValue);
-    Serial.print(F("; bValue: "));
-    Serial.print(bValue);
+    //Serial.print(F("; rValue: "));
+    //Serial.print(rValue);
+    //Serial.print(F("; gValue: "));
+    //Serial.print(gValue);
+    //Serial.print(F("; bValue: "));
+    //Serial.print(bValue);
 
     // set the new colour on all LEDs that are on
     for ( int j = 0 ; j < wordLEDS ; j++ ){                 // every LED
@@ -775,8 +749,8 @@ void loop(void)
   }
 
   if (digitalRead(colourCyclePin) == LOW){
-    Serial.println("");
-    Serial.print(F("Cycling colour, not yet implemented"));
+    //Serial.println("");
+    //Serial.print(F("Cycling colour, not yet implemented"));
     delay(500);
   }
 }*/

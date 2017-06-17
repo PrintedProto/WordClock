@@ -74,8 +74,9 @@ public:
     void begin(FS* fs);
     void handle();
     void getTime();
+    void Word_Init(German * _wordAddress);
     RtcDateTime _curTime; //RtcDateTime(year, month, dayOfMonth, hour, minute, second);
-
+    German * _word;
 
 protected:
     strConfig _config; // General and WiFi configuration

@@ -6,6 +6,7 @@
 #include "FSWebServerLib.h"
 #include <StreamString.h>
 
+
 AsyncFSWebServer ESPHTTPServer(80);
 
 const char Page_WaitAndReload[] PROGMEM = R"=====(
@@ -56,6 +57,18 @@ void AsyncFSWebServer::getTime() {
 
 
 }
+
+void AsyncFSWebServer::Word_Init(German * _wordAddress) {
+  _word = _wordAddress;
+  _word->setBrightness(_word->LEDbrightness);
+  _word->begin();
+  _word->show();
+  getTime();
+  _word->displayMinutes(_curTime.Minute());
+
+}
+
+
 /*
 void AsyncFSWebServer::sendTimeData() {
     String data = "{";

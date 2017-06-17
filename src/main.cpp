@@ -21,7 +21,7 @@ void setup() {
     SPIFFS.begin(); // Not really needed, checked inside library and started if needed
     ESPHTTPServer.begin(&SPIFFS);
     German word = German(wordledpin);
-    word.Word_Init();
+    ESPHTTPServer.Word_Init(&word);
     /* add setup code here */
 
 }

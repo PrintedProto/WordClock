@@ -2,7 +2,7 @@
 #define _german_h
 
 #include "Adafruit_NeoMatrix.h"
-#include "FSWebServerLib.h"
+//#include "FSWebServerLib.h"
 
 #define wordLEDS 121
 //#define minutePIN 2
@@ -19,7 +19,7 @@ public:
 	void displayWords(int minute, int hour);
 	void displayMinutes(int minute);
 	//void getTime();
-	void Word_Init();
+	//void Word_Init();
 	//byte hour, minute, second;
 	byte LEDbrightness, maxBrightness, rValue, gValue, bValue, fadingDelay, fadingStep;
 	boolean wordFading, minuteFading;
