@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><html>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <div id="colordiv"></div>
@@ -7,12 +7,13 @@
 <hr class="index">
 <table style="width:400px">
   <tr>
-    <td>Current date:</td>
-    <td id="curDate">polling</td>
+    <td id="sTim" style="width:60px" rowspan="2" class="btn btn--s btn--blue">Set</td>
+    <td style="width:25px; text-align:right">Date:</td>
+    <td id="curDate" style="width:200px; text-align:center">polling</td>
   </tr>
   <tr>
-    <td>Current time:</td>
-    <td id="curTime">polling</td>
+    <td style="width:25px; text-align:right">Time:</td>
+    <td id="curTime" style="width:200px; text-align:center">polling</td>
   </tr>
 </table>
 <br>
@@ -59,11 +60,11 @@
 <table style="width:400px">
   <strong>Animate</strong>
   <tr>
-
+    <td id="anim" style="width:100px; align:left"></td>
   </tr>
 </table>
 </div>
-
+</html>
 
 
 
@@ -71,7 +72,7 @@
 
 <script language="javascript" type="text/javascript">
 
-  var briVal, rVal, gVal, bVal, hexVal;
+  var briVal, rVal, gVal, bVal, hexVal, sendFlag;
   var bri = document.getElementById("Bri");
   var bbri = document.getElementById("bBri");
   var rsli = document.getElementById("rSli");
@@ -80,6 +81,9 @@
   var bgsli = document.getElementById("bgSli");
   var bsli = document.getElementById("bSli");
   var bbsli = document.getElementById("bbSli");
+  var sTim = document.getElementById("sTim");
+  var mt = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"] ;
+  var mtdy = [31,28,31,30,31,30,31,31,30,31,30,31];
 
   function startTime(res) {
 
@@ -90,7 +94,7 @@
       return;
     }
     var resp = JSON.parse(res.target.responseText);
-    var mt = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]
+
 
     document.getElementById("curDate").innerHTML = resp[0].yr + " / " + mt[(resp[0].mn)-1] + " / " + resp[0].dy;
     document.getElementById("curTime").innerHTML = resp[0].hh + " : " + checkTime(resp[0].mm) ;
@@ -133,6 +137,14 @@
    bbsli.innerHTML = bVal;
    updateHex();
  }
+ function reqTime(){
+   request = new XMLHttpRequest();
+   if (request) {
+       request.open("GET", "/time", true);
+       request.addEventListener("load", startTime)
+       request.send();
+   }
+ }
 	window.onload = function ()
 	{
 		load("style.css","css", function()
@@ -140,12 +152,7 @@
 			load("microajax.js","js", function()
 			{
 				// Do something after load...
-        request = new XMLHttpRequest();
-        if (request) {
-            request.open("GET", "/time", true);
-            request.addEventListener("load", startTime)
-            request.send();
-        }
+        reqTime();
         bri.value = briVal/250 * 100;
         bbri.innerHTML = briVal/250 * 100;
         document.getElementById("pCol").style.backgroundColor = hexVal;
@@ -173,6 +180,29 @@
           document.getElementById("main").style.display='none';
           showPicker();
         });
+        sTim.addEventListener("click", function(){
+          if(!sendFlag){
+            document.getElementById("curDate").innerHTML = "<input id=\"inDate\" type=\"name\" placeholder=\"yyyy\:mm\:dd\">";
+					  document.getElementById("curTime").innerHTML = "<input id=\"inTime\"type=\"name\" placeholder=\"hh\:mm\">";
+            sendFlag=true;
+          } else if (sendFlag){
+            sendFlag=false;
+            var dstr = document.getElementById("inDate").value;
+            var tstr = document.getElementById("inTime").value;
+            var darr = dstr.split(":");
+            var tarr = tstr.split(":");
+            var iarr = [parseInt(darr[0]),parseInt(darr[1]),parseInt(darr[2]),parseInt(tarr[0]),parseInt(tarr[1])];
+            if(iarr[0]>2001 && iarr[1]>0 && iarr[2]>0 && iarr[3]>0 && iarr[4]>0){
+              if(iarr[1]<13 && iarr[2]<mtdy[iarr[1]-1] && iarr[3]<25 && iarr[4]<60){
+                var params = "yr=" + (iarr[0]-2000) + "&mn=" + darr[1] + "&dy=" + darr[2] + "&hh=" + tarr[0] + "&mm=" + tarr[1] ;
+                //document.getElementById("anim").innerHTML = params;
+                while(!ajaxPost("/time",params)){};
+              }
+            }
+            reqTime();
+          } else {sendFlag=false;}
+        });
+
         document.getElementById("sCol").addEventListener("click", function(){
 					             sendcolor;
 				});

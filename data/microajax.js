@@ -65,3 +65,14 @@ function ajaxGet(U,F){
   x.open("GET", U, true);
   x.send();
 }
+
+function ajaxPost(U,params){
+  var x = new XMLHttpRequest();
+  x.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      return true;
+    }};
+  x.open("POST", U, true);
+  x.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  x.send(params);
+}

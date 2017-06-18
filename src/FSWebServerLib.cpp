@@ -8,6 +8,7 @@
 
 
 AsyncFSWebServer ESPHTTPServer(80);
+//AsyncWebSocket ws("/ws");// url will be ws://esp-ip/ws
 
 const char Page_WaitAndReload[] PROGMEM = R"=====(
 <meta http-equiv="refresh" content="10; URL=/config.html">
@@ -829,23 +830,18 @@ String AsyncFSWebServer::urldecode(String input) // (based on https://code.googl
 {
     char c;
     String ret = "";
-
     for (byte t = 0; t < input.length(); t++) {
         c = input[t];
         if (c == '+') c = ' ';
         if (c == '%') {
-
-
             t++;
             c = input[t];
             t++;
             c = (h2int(c) << 4) | h2int(input[t]);
         }
-
         ret.concat(c);
     }
     return ret;
-
 }
 
 //
@@ -1168,8 +1164,8 @@ void AsyncFSWebServer::disConnect(AsyncWebServerRequest *request) {
     WiFi.disconnect();
 }
 void AsyncFSWebServer::handleTime(AsyncWebServerRequest *request) {
-  int yr;
-  byte mn, dy, hh, mm;
+
+  byte yr, mn, dy, hh, mm;
   if (request->args() > 0)  // Save Settings
   {
       for (uint8_t i = 0; i < request->args(); i++) {
@@ -1180,14 +1176,16 @@ void AsyncFSWebServer::handleTime(AsyncWebServerRequest *request) {
           if (request->argName(i) == "mm") { mm = request->arg(i).toInt(); continue; }
           //if (request->argName(i) == "ss") { if (checkRange(request->arg(i))) 	_config.ip[3] = request->arg(i).toInt(); continue; }
         }
-        _curTime = RtcDateTime(2000-yr, mn, dy, hh, mm, 00);
+        _curTime = RtcDateTime(yr, mn, dy, hh, mm, 00);
         if (!_RTC.GetIsRunning()) {
             //Serial.println("RTC was not actively running, starting now");
             _RTC.SetIsRunning(true);
         }
         _RTC.SetDateTime(_curTime);
         showTime();
+        request->send(200, "text/html", "OK");
     } else {
+      getTime();
       String json = "[";
       json += "{";
       json += "\"yr\":" + String(_curTime.Year()) ;
@@ -1201,6 +1199,78 @@ void AsyncFSWebServer::handleTime(AsyncWebServerRequest *request) {
       json = "";
     }
 
+}
+
+void AsyncFSWebServer::onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+  if(type == WS_EVT_CONNECT){
+    Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
+    client->printf("Hello Client %u :)", client->id());
+    client->ping();
+  } else if(type == WS_EVT_DISCONNECT){
+    Serial.printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+  } else if(type == WS_EVT_ERROR){
+    Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+  } else if(type == WS_EVT_PONG){
+    Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+  } else if(type == WS_EVT_DATA){
+    AwsFrameInfo * info = (AwsFrameInfo*)arg;
+    String msg = "";
+    if(info->final && info->index == 0 && info->len == len){
+      //the whole message is in a single frame and we got all of it's data
+      Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
+
+      if(info->opcode == WS_TEXT){
+        for(size_t i=0; i < info->len; i++) {
+          msg += (char) data[i];
+        }
+      } else {
+        char buff[3];
+        for(size_t i=0; i < info->len; i++) {
+          sprintf(buff, "%02x ", (uint8_t) data[i]);
+          msg += buff ;
+        }
+      }
+      Serial.printf("%s\n",msg.c_str());
+
+      if(info->opcode == WS_TEXT)
+        client->text("I got your text message");
+      else
+        client->binary("I got your binary message");
+    } else {
+      //message is comprised of multiple frames or the frame is split into multiple packets
+      if(info->index == 0){
+        if(info->num == 0)
+          Serial.printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+        Serial.printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+      }
+
+      Serial.printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
+
+      if(info->opcode == WS_TEXT){
+        for(size_t i=0; i < info->len; i++) {
+          msg += (char) data[i];
+        }
+      } else {
+        char buff[3];
+        for(size_t i=0; i < info->len; i++) {
+          sprintf(buff, "%02x ", (uint8_t) data[i]);
+          msg += buff ;
+        }
+      }
+      Serial.printf("%s\n",msg.c_str());
+
+      if((info->index + len) == info->len){
+        Serial.printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+        if(info->final){
+          Serial.printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+          if(info->message_opcode == WS_TEXT)
+            client->text("I got your text message");
+          else
+            client->binary("I got your binary message");
+        }
+      }
+    }
+  }
 }
 void AsyncFSWebServer::serverInit() {
     //SERVER INIT
@@ -1384,6 +1454,8 @@ void AsyncFSWebServer::serverInit() {
         //DEBUGLOG("Event source client connected from %s\r\n", client->client()->remoteIP().toString().c_str());//printedproto
     });
     addHandler(&_evs);
+    _ws.onEvent(std::bind(&AsyncFSWebServer::onWsEvent,this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
+    addHandler(&_ws);
 
 #define HIDE_SECRET
 #ifdef HIDE_SECRET

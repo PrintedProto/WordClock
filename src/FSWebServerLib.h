@@ -17,6 +17,7 @@
 #include "ESPAsyncWebServer.h"
 #include "ESP8266mDNS.h"
 #include "FS.h"
+#include "AsyncWebSocket.h"
 #include "Ticker.h"
 #include "ArduinoOTA.h"
 #include "ArduinoJson.h"
@@ -80,7 +81,7 @@ public:
     German * _word;
     bool chkTk();
     static bool _secondFlag;
-
+    void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
 
 
 protected:
@@ -98,7 +99,7 @@ protected:
 
     Ticker _secondTk;
 
-
+    AsyncWebSocket _ws = AsyncWebSocket("/ws");// url will be ws://esp-ip/ws
     AsyncEventSource _evs = AsyncEventSource("/events");
 
     //void sendTimeData();
@@ -145,7 +146,7 @@ protected:
     void disConnect(AsyncWebServerRequest *request);
     void handleTime(AsyncWebServerRequest *request);
     void toggleTicker(bool state, float sec);
-    
+
 
     static String urldecode(String input); // (based on https://code.google.com/p/avr-netino/)
     static unsigned char h2int(char c);
@@ -153,5 +154,6 @@ protected:
 };
 
 extern AsyncFSWebServer ESPHTTPServer;
+//extern AsyncWebSocket ws;
 
 #endif // _FSWEBSERVERLIB_h

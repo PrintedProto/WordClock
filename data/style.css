@@ -16,7 +16,7 @@ hr {
     border-style: solid;
     border-width: 1px;
     color: #111;
-    display: inline-block;
+    /*display: inline-block;*/
     font-family: avenir, helvetica, arial, sans-serif;
     letter-spacing: 0.15em;
     margin-bottom: 0.5em;
