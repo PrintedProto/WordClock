@@ -80,7 +80,7 @@ const char* colourName[9] = {"WHITE","RED","GREEN","BLUE","ORANGE","YELLOW","CYA
 
 // To adjust the brightness
 byte LEDbrightness = 50;                                  // base LED brightness, value between 1 - 255 (with 255 being the brightest)
-byte maxBrightness = 150;                                // limit the maximum brightness to lower stress on the LEDs
+byte maxBrightness = 230;                                // limit the maximum brightness to lower stress on the LEDs
 //int IncBrightPin=7;
 //int RedBrightPin=9;
 // Value of each colour, starting with White

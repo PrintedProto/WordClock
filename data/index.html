@@ -21,7 +21,7 @@
   <strong>Brightness</strong>
   <tr>
     <td id="sBri" style="width:80px" class="btn btn--s btn--blue">Set</td>
-    <td><input type="range" id="Bri" value="90" style="width:200px"></td>
+    <td><input type="range" id="Bri" value="90" style="width:200px" max="250"></td>
     <td id="bBri" style="width:100px; align:left" class="box"></td>
   </tr>
 </table>
@@ -35,19 +35,22 @@
   </tr>
 </table>
 <table style="width:400px">
-  <tr>
+  <tr></tr>
+  <tr style="height:50px">
     <td>RED</td>
-    <td><input type="range" id="rSli" style="width:200px"></td>
+    <td><input type="range" id="rSli" style="width:200px" max="250"></td>
     <td id="brSli" style="width:100px; align:left" class="box"></td>
   </tr>
-  <tr>
+  <tr></tr>
+  <tr style="height:50px">
     <td>GRN</td>
-    <td><input type="range" id="gSli" style="width:200px"></td>
+    <td><input type="range" id="gSli" style="width:200px" max="250"></td>
     <td id="bgSli" style="width:100px; align:left" class="box"></td>
   </tr>
-  <tr>
+  <tr></tr>
+  <tr style="height:50px">
     <td>BLU</td>
-    <td><input type="range" id="bSli" style="width:200px"></td>
+    <td><input type="range" id="bSli" style="width:200px" max="250"></td>
     <td id="bbSli" style="width:100px; align:left" class="box"></td>
   </tr>
 </table>
@@ -69,7 +72,14 @@
 <script language="javascript" type="text/javascript">
 
   var briVal, rVal, gVal, bVal, hexVal;
-
+  var bri = document.getElementById("Bri");
+  var bbri = document.getElementById("bBri");
+  var rsli = document.getElementById("rSli");
+  var brsli = document.getElementById("brSli");
+  var gsli = document.getElementById("gSli");
+  var bgsli = document.getElementById("bgSli");
+  var bsli = document.getElementById("bSli");
+  var bbsli = document.getElementById("bbSli");
 
   function startTime(res) {
 
@@ -91,20 +101,38 @@
   }
 
   function updateHex(){
-    rgbToHex(rVal, gVal, bVal);
-    document.getElementById("pCol").style.backgroundColor = hexVal;
-    document.getElementById("pCol").innerHTML = hexVal;
+    rgbToHex(rsli.value, gsli.value, bsli.value);
+    document.getElementById("pCol").style.backgroundColor = "#" + hexVal;
+    document.getElementById("pCol").innerHTML = "#" + hexVal;
   }
   function updateRGB(){
     hexToRgb(hexVal);
-    document.getElementById("rSli").value  = rVal;
-    document.getElementById("brSli").innerHTML = rVal;
-    document.getElementById("gSli").value  = gVal;
-    document.getElementById("bgSli").innerHTML = gVal;
-    document.getElementById("bSli").value  = bVal;
-    document.getElementById("bbSli").innerHTML = bVal;
+    rsli.value  = rVal;
+    brsli.innerHTML = rVal;
+    gsli.value  = gVal;
+    bgsli.innerHTML = gVal;
+    bsli.value  = bVal;
+    bbsli.innerHTML = bVal;
   }
-
+ function updBri(){
+   briVal = bri.value ;
+   bbri.innerHTML = bri.value;
+ }
+ function updRd(){
+   rVal = rsli.value;
+   brsli.innerHTML = rVal;
+   updateHex();
+ }
+ function updGr(){
+   gVal = gsli.value;
+   bgsli.innerHTML = gVal;
+   updateHex();
+ }
+ function updBl(){
+   bVal = bsli.value;
+   bbsli.innerHTML = bVal;
+   updateHex();
+ }
 	window.onload = function ()
 	{
 		load("style.css","css", function()
@@ -118,60 +146,33 @@
             request.addEventListener("load", startTime)
             request.send();
         }
-        document.getElementById("Bri").value = briVal/250 * 100;
-        document.getElementById("bBri").innerHTML = briVal/250 * 100;
+        bri.value = briVal/250 * 100;
+        bbri.innerHTML = briVal/250 * 100;
         document.getElementById("pCol").style.backgroundColor = hexVal;
         document.getElementById("pCol").innerHTML = hexVal;
-        document.getElementById("rSli").value  = rVal;
-        document.getElementById("brSli").innerHTML = rVal;
-        document.getElementById("gSli").value  = gVal;
-        document.getElementById("bgSli").innerHTML = gVal;
-        document.getElementById("bSli").value  = bVal;
-        document.getElementById("bbSli").innerHTML = bVal;
+        rsli.value  = rVal;
+        brsli.innerHTML = rVal;
+        gsli.value  = gVal;
+        bgsli.innerHTML = gVal;
+        bsli.value  = bVal;
+        bbsli.innerHTML = bVal;
 
-        document.getElementById("Bri").addEventListener("touchmove", function(){
-          briVal = Math.ceil((document.getElementById("Bri").value/100 * 250)) ;
-					document.getElementById("bBri").innerHTML = document.getElementById("Bri").value;
-				});
-        document.getElementById("Bri").addEventListener("mousemove", function(){
-          briVal = Math.ceil((document.getElementById("Bri").value/100 * 250)) ;
-					document.getElementById("bBri").innerHTML = document.getElementById("Bri").value;
-				});
+        bri.addEventListener("touchstart", updBri);
+        bri.addEventListener("touchmove", updBri);
+        bri.addEventListener("mousemove", updBri);
+        rsli.addEventListener("touchstart", updRd);
+        rsli.addEventListener("touchmove", updRd);
+        rsli.addEventListener("mousemove", updRd);
+        gsli.addEventListener("touchstart", updGr);
+        gsli.addEventListener("touchmove", updGr);
+        gsli.addEventListener("mousemove", updGr);
+        bsli.addEventListener("touchstart", updBl);
+        bsli.addEventListener("touchmove", updBl);
+        bsli.addEventListener("mousemove", updBl);
         document.getElementById("pCol").addEventListener("click", function(){
-					document.getElementById("main").style.display='none';
+          document.getElementById("main").style.display='none';
           showPicker();
         });
-        document.getElementById("rSli").addEventListener("touchmove", function(){
-          rVal = Math.ceil(document.getElementById("rSli").value/100 * 250);
-					document.getElementById("brSli").innerHTML = rVal;
-          updateHex();
-				});
-        document.getElementById("rSli").addEventListener("mousemove", function(){
-          rVal = Math.ceil(document.getElementById("rSli").value/100 * 250);
-					document.getElementById("brSli").innerHTML = rVal;
-          updateHex();
-				});
-        document.getElementById("gSli").addEventListener("touchmove", function(){
-          gVal = Math.ceil(document.getElementById("gSli").value/100 * 250);
-					document.getElementById("bgSli").innerHTML = gVal;
-          updateHex();
-				});
-        document.getElementById("gSli").addEventListener("mousemove", function(){
-          gVal = Math.ceil(document.getElementById("gSli").value/100 * 250);
-					document.getElementById("bgSli").innerHTML = gVal;
-          updateHex();
-				});
-        document.getElementById("bSli").addEventListener("touchmove", function(){
-          bVal = Math.ceil(document.getElementById("bSli").value/100 * 250);
-					document.getElementById("bbSli").innerHTML = bVal;
-          updateHex();
-				});
-        document.getElementById("bSli").addEventListener("mousemove", function(){
-          bVal = Math.ceil(document.getElementById("bSli").value/100 * 250);
-					document.getElementById("bbSli").innerHTML = bVal;
-          updateHex();
-				});
-
         document.getElementById("sCol").addEventListener("click", function(){
 					             sendcolor;
 				});
@@ -197,9 +198,15 @@
 			document.getElementsByTagName("head")[0].appendChild(a)
 		}
 	}
-  function rgbToHex(r, g, b) {
-    hexVal = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  function rgbToHex(R,G,B) {
+    hexVal = toHex(R)+toHex(G)+toHex(B);
   }
+    function toHex(n) {
+      n = parseInt(n,10);
+      if (isNaN(n)) return "00";
+      n = Math.max(0,Math.min(n,255));
+      return "0123456789ABCDEF".charAt((n-n%16)/16) + "0123456789ABCDEF".charAt(n%16);
+    }
   function hexToRgb(hex) {
     hex = hex.replace(/[^0-9A-F]/gi, '');
     var bigint = parseInt(hex, 16);
@@ -257,12 +264,12 @@
       rVal = data[0];
       gVal = data[1];
       bVal = data[2];
-      var params = ['r=' + rVal, 'g=' + gVal, 'b=' + bVal].join('&');
+      //var params = ['r=' + rVal, 'g=' + gVal, 'b=' + bVal].join('&');
       document.getElementById("colordiv").innerHTML="";
       document.getElementById("main").style.display='initial';
       rgbToHex(rVal, gVal, bVal);
-      document.getElementById("pCol").style.backgroundColor=hexVal;
-      document.getElementById("pCol").innerHTML=hexVal;
+      document.getElementById("pCol").style.backgroundColor= "#" + hexVal;
+      document.getElementById("pCol").innerHTML= "#" +hexVal;
       updateRGB();
     }
     canvas.addEventListener('click', function(event) {
